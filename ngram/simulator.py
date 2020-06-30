@@ -110,19 +110,15 @@ class NGramMonteCarlo(MonteCarlo):
     pass
 
 
-if __name__ == '__main__':
+def main():
     ngram = NGramMonteCarlo.from_pickle(open("./hello.pickle", "rb"))
 
     mlps = ngram.sample(100000)
     ll = ngram.parse_file(open("/home/cw/Codes/Python/PwdTools/corpora/tar/csdn-tar.txt"))
-    print(ll[0])
     mc = MonteCarloLib(mlps)
-    mlp = ngram.calc_minus_log_prob("q1w2e3r4")
-    print(mlp)
-    pos = mc.minus_log_prob2rank(mlp)
-    print(pos)
-    # logp, passwd = ngram.sample_one()
-    # (11.22881869049588, 'effort20071108')
-    # print(passwd)
-    # print(logp)
-    # print(ngram.calc_prob(passwd))
+    mc.mlps2gc(ll)
+    mc.write2(open("hello.txt.pickle", "w"))
+
+
+if __name__ == '__main__':
+    main()

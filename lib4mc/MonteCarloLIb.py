@@ -12,6 +12,7 @@ class MonteCarloLib:
         minus_log_probs, positions = self.__gen_rank_from_minus_log_prob()
         self.__minus_log_probs = minus_log_probs
         self.__positions = positions
+        self.__gc = None
         pass
 
     def __gen_rank_from_minus_log_prob(self) -> Tuple[numpy.ndarray, numpy.ndarray]:
@@ -41,10 +42,21 @@ class MonteCarloLib:
         prev_rank = 0
         cracked = 0
         total = sum([a for _, a, _ in minus_log_prob_iter])
-        for pwd, appearance, mlp in tqdm(minus_log_prob_iter):
+        for pwd, appearance, mlp in tqdm(minus_log_prob_iter, desc="Ranking: "):
             idx = bisect.bisect_right(self.__minus_log_probs, mlp)
             rank = ceil(max(self.__positions[idx - 1] if idx > 0 else 1, prev_rank + 1))
             cracked += appearance
             prev_rank = rank
             gc.append((pwd, mlp, appearance, rank, cracked, cracked / total * 100))
+        self.__gc = gc
         return gc
+
+    def write2(self, fd: TextIO):
+        if not fd.writable():
+            raise Exception(f"{fd.name} is not writable")
+        if self.__gc is None:
+            raise Exception(f"run mlps2gc before invoke this method")
+        for pwd, mlp, appearance, rank, cracked, cracked_ratio in self.__gc:
+            fd.write(f"{pwd}\t{mlp:.8f}\t{appearance}\t{rank}\t{cracked}\t{cracked_ratio:5.2f}\n")
+        self.__gc = None
+        pass

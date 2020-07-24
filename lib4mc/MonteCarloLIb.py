@@ -56,7 +56,7 @@ class MonteCarloLib:
             raise Exception(f"{fd.name} is not writable")
         if self.__gc is None:
             raise Exception(f"run mlps2gc before invoke this method")
-        for pwd, mlp, appearance, rank, cracked, cracked_ratio in self.__gc:
+        for pwd, mlp, appearance, rank, cracked, cracked_ratio in tqdm(self.__gc, desc="Saving: "):
             fd.write(f"{pwd}\t{mlp:.8f}\t{appearance}\t{rank}\t{cracked}\t{cracked_ratio:5.2f}\n")
         self.__gc = None
         pass

@@ -1,4 +1,5 @@
 import bisect
+import os
 import pickle
 import random
 import sys
@@ -36,6 +37,7 @@ def pick_expand(expanded: (Dict[str, float], List[str], List[float])):
 
 class NGramMonteCarlo(MonteCarlo):
     def __init__(self, pwd_list: TextIO, n: int = 4, end_chr: str = "\x03"):
+        print(f"Training set: {os.path.abspath(pwd_list.name)}", file=sys.stderr)
         self.ngram_dict = expand(ngram_counter(pwd_list, n, end_chr))
         self.n = n
         self.end_chr = end_chr
@@ -70,17 +72,21 @@ class NGramMonteCarlo(MonteCarlo):
             if len(pwd) < self.n:
                 p, addon = pick_expand(self.ngram_dict.get(pwd))
             else:
-                p, addon = pick_expand(self.ngram_dict.get(pwd[-3:]))
+                p, addon = pick_expand(self.ngram_dict.get(pwd[1 - self.n:]))
             prob -= log2(p)
             if addon == self.end_chr:
                 if len(pwd) > 3:
                     break
                 else:
+                    pwd = ""
+                    prob = .0
                     continue
             pwd += addon
+            if len(pwd) >= 256:
+                pwd = ""
+                prob = .0
             pass
         return prob, pwd
-        pass
 
     @classmethod
     def from_pickle(cls, model: BinaryIO):
@@ -111,13 +117,20 @@ class NGramMonteCarlo(MonteCarlo):
 
 
 def main():
-    ngram = NGramMonteCarlo.from_pickle(open("./hello.pickle", "rb"))
+    for corpus in ["xato"]:
+        n = 5
+        ngram = NGramMonteCarlo(
+            pwd_list=open(f"/home/cw/Documents/Experiments/SegLab/Corpora/{corpus}-src.txt"),
+            n=n)
 
-    mlps = ngram.sample(100000)
-    ll = ngram.parse_file(open("/home/cw/Codes/Python/PwdTools/corpora/tar/csdn-tar.txt"))
-    mc = MonteCarloLib(mlps)
-    mc.mlps2gc(ll)
-    mc.write2(open("hello.txt.pickle", "w"))
+        mlps = ngram.sample(1000000)
+        ll = ngram.parse_file(
+            open(f"/home/cw/Documents/Experiments/SegLab/Corpora/{corpus}-tar.txt"))
+        mc = MonteCarloLib(mlps)
+        mc.mlps2gc(ll)
+        mc.write2(
+            open(f"/home/cw/Documents/Experiments/SegLab/SimulatedNGram/{corpus}-{n}gram.txt", "w"))
+        pass
 
 
 if __name__ == '__main__':

@@ -31,13 +31,16 @@ class MonteCarloLib:
         idx = bisect.bisect_right(self.__minus_log_probs, minus_log_prob)
         return self.__positions[idx - 1] if idx > 0 else 1
 
-    def mlps2gc(self, minus_log_prob_iter: List[Tuple[str, int, float]]) \
+    def mlps2gc(self, minus_log_prob_iter: List[Tuple[str, int, float]], need_resort: bool = False) \
             -> List[Tuple[str, float, int, int, int, float]]:
         """
 
+        :param need_resort:
         :param minus_log_prob_iter: sorted
         :return:
         """
+        if need_resort:
+            minus_log_prob_iter = sorted(minus_log_prob_iter, key=lambda x: x[2])
         gc = []
         prev_rank = 0
         cracked = 0

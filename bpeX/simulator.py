@@ -119,7 +119,7 @@ class BpePcfgSim(MonteCarlo):
             # prob = self.calc_minus_log_prob(pwd)
             pass
         results = []
-        for pwd, cnt in tqdm(iterable=pwd_counter, desc="Scoring: "):
+        for pwd, cnt in tqdm(iterable=pwd_counter.items(), desc="Scoring: "):
             prob = self.calc_minus_log_prob(pwd)
             results.append((pwd, cnt, prob))
         del pwd_counter
@@ -165,8 +165,12 @@ def test():
     samples = bpePcfg.sample()
     scored = bpePcfg.parse_file(open("/home/cw/Documents/tmp/178_new.txt"))
     monte_carlo = MonteCarloLib(minus_log_prob_list=samples)
-    monte_carlo.mlps2gc(scored)
-    monte_carlo.write2(open("/home/cw/Documents/tmp/scored_178.txt"))
+    monte_carlo.mlps2gc(scored, need_resort=True)
+    monte_carlo.write2(open("/home/cw/Documents/tmp/scored_178.txt", "w"))
+    pass
+
+
+def wrapper(model_path: str, testing_set: TextIO, save2: TextIO):
     pass
 
 

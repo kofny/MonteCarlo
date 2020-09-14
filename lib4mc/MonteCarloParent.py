@@ -22,6 +22,6 @@ class MonteCarlo(metaclass=abc.ABCMeta):
         return [.0]
 
     @abc.abstractmethod
-    def parse_file(self, test: TextIO) -> List[Tuple[str, int, float]]:
+    def parse_file(self, testing_set: TextIO) -> List[Tuple[str, int, float]]:
         return [("", 0, .0)]
         pass

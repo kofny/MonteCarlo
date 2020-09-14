@@ -96,15 +96,15 @@ class NGramMonteCarlo(MonteCarlo):
         obj.ngram_dict = expand(ngram_dict)
         return obj
 
-    def parse_file(self, test: TextIO) -> List[Tuple[str, int, float]]:
+    def parse_file(self, testing_set: TextIO) -> List[Tuple[str, int, float]]:
         """
         get minus log prob for test set
-        :param test: test set
+        :param testing_set: test set
         :return: List of tuple (pwd, appearance, minus log prob)
         """
-        line_num = wc_l(test)
+        line_num = wc_l(testing_set)
         pwd_counter = defaultdict(int)
-        for line in tqdm(test, desc="Counting: ", total=line_num):
+        for line in tqdm(testing_set, desc="Counting: ", total=line_num):
             line = line.strip("\r\n")
             pwd_counter[line] += 1
         res = []

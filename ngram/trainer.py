@@ -1,10 +1,11 @@
+import random
 from collections import defaultdict
+from math import log10
 from typing import TextIO, Dict
 
 from tqdm import tqdm
 
 from lib4mc.FileLib import wc_l
-from lib4mc.SaveModelLib import save_ngram
 
 
 def ngram_counter(pwd_list: TextIO, n: int = 4, end_chr: str = "\x03") -> Dict[str, Dict[str, float]]:
@@ -29,8 +30,37 @@ def ngram_counter(pwd_list: TextIO, n: int = 4, end_chr: str = "\x03") -> Dict[s
     return ngram_float_dict
 
 
-if __name__ == '__main__':
-    nd = ngram_counter(open("/home/cw/Codes/Python/PwdTools/corpora/src/csdn-src.txt"))
-    fd = open("./hello.pickle", "wb")
-    save_ngram(nd, 4, "\x03", fd)
+def count_space(ngrams: dict, prefix: str, total: int):
+    addons = ngrams.get(prefix, {})
+
+    count = len(addons)
+    if count == 0:
+        return 1
+    _next = 0
+    rand_addon = random.choice(list(addons))
+    new_prefix = prefix[1:] + rand_addon
+    if total > 40:
+        return count * 1
+    return count * count_space(ngrams, new_prefix, total + 1)
+    # for addon in addons:
+    #     new_prefix = prefix[1:] + addon
+    #     _next += len(ngrams.get(new_prefix))
     pass
+
+
+def main():
+    for corpus in ['webhost']:
+        nd = ngram_counter(open(f"/home/cw/Codes/Python/PwdTools/corpora/src/{corpus}-src.txt"), n=6)
+        # print(nd)
+        _total = 0
+        _range = 10000
+        for _ in range(_range):
+            _total += count_space(nd, '', 0)
+        print(f"{log10(_total/_range):5.2f}")
+        # fd = open("./hello.pickle", "wb")
+        # save_ngram(nd, 4, "\x03", fd)
+    pass
+
+
+if __name__ == '__main__':
+    main()

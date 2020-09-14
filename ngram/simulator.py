@@ -59,11 +59,12 @@ class NGramMonteCarlo(MonteCarlo):
             else:
                 prefix = n_pwd[i - self.n + 1:i]
             addons = self.ngram_dict.get(prefix, [{}])[0]
-            prob = addons.get(c, sys.float_info.min)
+            if c not in addons:
+                return sys.maxsize
+            prob = addons.get(c)
             log_prob -= log2(prob)
             # log_prob += self.ngram_dict.get(prefix, [{}])[0].get(c, 10000)
         return log_prob
-        pass
 
     def sample_one(self) -> Tuple[float, str]:
         pwd = ""
@@ -117,19 +118,20 @@ class NGramMonteCarlo(MonteCarlo):
 
 
 def main():
-    for corpus in ["xato"]:
-        n = 5
-        ngram = NGramMonteCarlo(
-            pwd_list=open(f"/home/cw/Documents/Experiments/SegLab/Corpora/{corpus}-src.txt"),
-            n=n)
+    for corpus in ["csdn", "rockyou", "webhost", "dodonew", "xato"]:
+        for n in [2, 3, 4, 5]:
+            print(f"---------------------{corpus}-{n}gram--------------------------")
+            ngram = NGramMonteCarlo(
+                pwd_list=open(f"/home/cw/Documents/Experiments/SegLab/Corpora/{corpus}-src.txt"),
+                n=n)
 
-        mlps = ngram.sample(1000000)
-        ll = ngram.parse_file(
-            open(f"/home/cw/Documents/Experiments/SegLab/Corpora/{corpus}-tar.txt"))
-        mc = MonteCarloLib(mlps)
-        mc.mlps2gc(ll)
-        mc.write2(
-            open(f"/home/cw/Documents/Experiments/SegLab/SimulatedNGram/{corpus}-{n}gram.txt", "w"))
+            mlps = ngram.sample(1000000)
+            ll = ngram.parse_file(
+                open(f"/home/cw/Documents/Experiments/SegLab/Corpora/{corpus}-tar.txt"))
+            mc = MonteCarloLib(mlps)
+            mc.mlps2gc(ll)
+            mc.write2(
+                open(f"/home/cw/Documents/Experiments/SegLab/SimulatedNGram/{corpus}-{n}gram.txt", "w"))
         pass
 
 

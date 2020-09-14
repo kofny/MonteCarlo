@@ -6,7 +6,7 @@ from typing import TextIO, List, Tuple, Dict, Any, Set
 
 from tqdm import tqdm
 
-from bpcX.modelreader import read_bpe
+from bpeX.modelreader import read_bpe
 from lib4mc.MonteCarloLIb import MonteCarloLib
 from lib4mc.MonteCarloParent import MonteCarlo
 from lib4mc.ProbLib import expand_2d, pick_expand, expand_1d

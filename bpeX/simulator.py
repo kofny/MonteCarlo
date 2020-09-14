@@ -42,7 +42,7 @@ def luds(pwd: str):
     pass
 
 
-def count_luds(structures: Dict[str, float]) -> Dict[Any, Set]:
+def count_luds(structures: Dict[str, float]) -> (Dict[Any, Set], Dict[str, set]):
     skipped_list = []
     converts = defaultdict(set)
     for structure in structures:
@@ -75,12 +75,16 @@ def count_luds(structures: Dict[str, float]) -> Dict[Any, Set]:
                 return False
         return True
 
-    for skipped in tqdm(skipped_list[:100], desc="Refining: "):
+    not_parsed = defaultdict(set)
+    for skipped in tqdm(skipped_list, desc="Refining: "):
         candidates = novels[len(skipped)]
         for candidate in candidates:
             if the_same(candidate, skipped):
                 converts[candidate].add(skipped)
-    return converts
+        length = sum([_len for _, _len in skipped])
+        not_parsed[length].add(skipped)
+
+    return converts, not_parsed
 
 
 class BpePcfgSim(MonteCarlo):
@@ -89,11 +93,15 @@ class BpePcfgSim(MonteCarlo):
         prob = .0
         p, struct = pick_expand(self.__grammars)
         prob += p
+        # lst = [(struct, 2 ** (-p))]
         for tag_len in struct:
             target_terminal = self.__terminals[tag_len]
             p, replacement = pick_expand(target_terminal)
             prob += p
             pwd += replacement
+            # lst.append((replacement, 2 ** (-p)))
+        # lst.append((pwd, 2 ** (-prob)))
+        # print(lst)
         return prob, pwd
 
     def sample(self, size: int = 100000) -> List[float]:
@@ -104,19 +112,28 @@ class BpePcfgSim(MonteCarlo):
         return results
 
     def parse_file(self, testing_set: TextIO) -> List[Tuple[str, int, float]]:
-        # for line in testing_set:
-        #     pwd = line.strip("\r\n")
-        #     prob = self.calc_minus_log_prob(pwd)
-        #
-        #     pass
-        pass
+        pwd_counter = defaultdict(int)
+        for line in testing_set:
+            pwd = line.strip("\r\n")
+            pwd_counter[pwd] += 1
+            # prob = self.calc_minus_log_prob(pwd)
+            pass
+        results = []
+        for pwd, cnt in tqdm(iterable=pwd_counter, desc="Scoring: "):
+            prob = self.calc_minus_log_prob(pwd)
+            results.append((pwd, cnt, prob))
+        del pwd_counter
+        return results
 
     def calc_minus_log_prob(self, pwd: str) -> float:
         label = luds(pwd)
         candidate_structures = self.__converted.get(label, set())
         log_max = log2(sys.float_info.max)
         if len(candidate_structures) == 0:
-            return log_max
+            length = sum([_len for _, _len in label])
+            candidate_structures = self.__not_parsed.get(length, set())
+            if len(candidate_structures) == 0:
+                return log_max
         grammars, _, _ = self.__grammars
         results = []
         for candidate in candidate_structures:
@@ -133,24 +150,23 @@ class BpePcfgSim(MonteCarlo):
                     p += terminal[replacement]
             results.append((candidate, p))
         min_minus_log_prob = min(results, key=lambda x: x[1])
-        print(min_minus_log_prob[0], 2 ** (-min_minus_log_prob[1]))
         return min_minus_log_prob[1]
 
     def __init__(self, model_path: str):
         grammars, terminals = read_bpe(model_path=model_path)
         self.__grammars = expand_1d(grammars, minus_log_based=True)
         self.__terminals = expand_2d(terminals, minus_log_based=True)
-        self.__converted = count_luds(grammars)
+        self.__converted, self.__not_parsed = count_luds(grammars)
         pass
 
 
 def test():
     bpePcfg = BpePcfgSim("/home/cw/Documents/tmp/model")
     samples = bpePcfg.sample()
+    scored = bpePcfg.parse_file(open("/home/cw/Documents/tmp/178_new.txt"))
     monte_carlo = MonteCarloLib(minus_log_prob_list=samples)
-    mlp = bpePcfg.calc_minus_log_prob("12345678z")
-    rank = monte_carlo.minus_log_prob2rank(mlp)
-    print(rank)
+    monte_carlo.mlps2gc(scored)
+    monte_carlo.write2(open("/home/cw/Documents/tmp/scored_178.txt"))
     pass
 
 

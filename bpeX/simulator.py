@@ -150,6 +150,7 @@ class BpePcfgSim(MonteCarlo):
                     p += terminal[replacement]
             results.append((candidate, p))
         min_minus_log_prob = min(results, key=lambda x: x[1])
+        print(f"{min_minus_log_prob[0]}, {2 ** (-min_minus_log_prob[1])}")
         return min_minus_log_prob[1]
 
     def __init__(self, model_path: str):
@@ -161,18 +162,33 @@ class BpePcfgSim(MonteCarlo):
 
 
 def test():
-    bpePcfg = BpePcfgSim("/home/cw/Documents/tmp/model")
+    bpePcfg = BpePcfgSim(model_path="/home/cw/Documents/tmp/model")
     samples = bpePcfg.sample()
-    scored = bpePcfg.parse_file(open("/home/cw/Documents/tmp/178_new.txt"))
     monte_carlo = MonteCarloLib(minus_log_prob_list=samples)
-    monte_carlo.mlps2gc(scored, need_resort=True)
-    monte_carlo.write2(open("/home/cw/Documents/tmp/scored_178.txt", "w"))
+    while True:
+        pwd = input("type in a password: ")
+        if pwd == 'exit!':
+            break
+        prob = bpePcfg.calc_minus_log_prob(pwd=pwd)
+        monte_carlo.minus_log_prob2rank(prob)
     pass
 
 
 def wrapper(model_path: str, testing_set: TextIO, save2: TextIO):
+    # "/home/cw/Documents/tmp/model"
+    bpePcfg = BpePcfgSim(model_path=model_path)
+    samples = bpePcfg.sample()
+    # open("/home/cw/Documents/tmp/178_new.txt")
+    scored = bpePcfg.parse_file(testing_set)
+    monte_carlo = MonteCarloLib(minus_log_prob_list=samples)
+    monte_carlo.mlps2gc(scored, need_resort=True)
+    # open("/home/cw/Documents/tmp/scored_178.txt", "w")
+    monte_carlo.write2(save2)
+
     pass
 
 
 if __name__ == '__main__':
-    test()
+    wrapper(model_path="/home/cw/Documents/tmp/model",
+            testing_set=open("/home/cw/Documents/tmp/178_new.txt"),
+            save2=open("/home/cw/Documents/tmp/scored_178.txt", "w"))

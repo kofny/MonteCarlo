@@ -8,6 +8,7 @@ from tqdm import tqdm
 
 class MonteCarloLib:
     def __init__(self, minus_log_prob_list: List[float]):
+        minus_log_prob_list.sort()
         self.__minus_log_prob_list = minus_log_prob_list
         minus_log_probs, positions = self.__gen_rank_from_minus_log_prob()
         self.__minus_log_probs = minus_log_probs

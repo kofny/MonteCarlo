@@ -7,7 +7,7 @@ from typing import TextIO, List, Tuple, Dict, Any, Set
 from tqdm import tqdm
 
 from bpeX.modelreader import read_bpe
-from lib4mc.MonteCarloLIb import MonteCarloLib
+from lib4mc.MonteCarloLib import MonteCarloLib
 from lib4mc.MonteCarloParent import MonteCarlo
 from lib4mc.ProbLib import expand_2d, pick_expand, expand_1d
 
@@ -47,39 +47,53 @@ def count_luds(structures: Dict[str, float]) -> (Dict[Any, Set], Dict[str, set])
     converts = defaultdict(set)
     for structure in structures:
         parsed_structure = []
+
         skip = False
         for tag, t_len in structure:
-            parsed_structure.append((tag, t_len))
+            if len(parsed_structure) > 0:
+                prev_tag, prev_len = parsed_structure[-1]
+                if prev_tag != tag:
+                    parsed_structure.append((tag, t_len))
+                else:
+                    parsed_structure[-1] = (tag, prev_len + t_len)
+            else:
+                parsed_structure.append((tag, t_len))
             if 'M' in tag:
                 skip = True
         parsed_structure = tuple(parsed_structure)
         if skip:
-            skipped_list.append(parsed_structure)
+            skipped_list.append(structure)
             continue
-        converts[parsed_structure].add(parsed_structure)
+        converts[parsed_structure].add(structure)
     novels = defaultdict(set)
     print("Preprocess done!")
     for k in converts.keys():
         novels[len(k)].add(k)
 
     def the_same(struct_a, struct_b) -> bool:
-        if sum([_len for _, _len in struct_a]) != sum([_len for _, _len in struct_b]):
+        if len(struct_a) != len(struct_b):
             return False
-        n_struct_a, n_struct_b = [], []
-        for _tag, _len in struct_a:
-            n_struct_a.extend([_tag] * _len)
-        for _tag, _len in struct_b:
-            n_struct_b.extend([_tag] * _len)
-        for s_a, s_b in zip(n_struct_a, n_struct_b):
+        for s_a, s_b in zip(struct_a, struct_b):
             if s_a != s_b and 'M' not in s_a and 'M' not in s_b:
                 return False
         return True
 
+    struct_speedup = {}
     not_parsed = defaultdict(set)
     for skipped in tqdm(skipped_list, desc="Refining: "):
         candidates = novels[len(skipped)]
+        speed_skipped = []
+        for s_tag, s_len in skipped:
+            speed_skipped.extend([s_tag] * s_len)
+
         for candidate in candidates:
-            if the_same(candidate, skipped):
+            if candidate not in struct_speedup:
+                backup = []
+                for s_tag, s_len in candidate:
+                    backup.extend([s_tag] * s_len)
+                struct_speedup[candidate] = backup
+            speed_candidate = struct_speedup[candidate]
+            if the_same(speed_candidate, speed_skipped):
                 converts[candidate].add(skipped)
         length = sum([_len for _, _len in skipped])
         not_parsed[length].add(skipped)
@@ -104,7 +118,7 @@ class BpePcfgSim(MonteCarlo):
         # print(lst)
         return prob, pwd
 
-    def sample(self, size: int = 100000) -> List[float]:
+    def sample(self, size: int = 1000000) -> List[float]:
         results = []
         for _ in tqdm(iterable=range(size), desc="Sampling: "):
             prob, _ = self.sample_one()
@@ -131,13 +145,16 @@ class BpePcfgSim(MonteCarlo):
         log_max = log2(sys.float_info.max)
         if len(candidate_structures) == 0:
             length = sum([_len for _, _len in label])
-            candidate_structures = self.__not_parsed.get(length, set())
+            addon_candidate_structures = self.__not_parsed.get(length, set())
+            candidate_structures.update(addon_candidate_structures)
             if len(candidate_structures) == 0:
                 return log_max
         grammars, _, _ = self.__grammars
         results = []
         for candidate in candidate_structures:
-            p = grammars.get(candidate)
+            p = grammars.get(candidate, log_max)
+            if p == log_max:
+                break
             start = 0
             for tag, t_len in candidate:
                 terminal, _, _ = self.__terminals.get((tag, t_len))
@@ -148,10 +165,13 @@ class BpePcfgSim(MonteCarlo):
                     break
                 else:
                     p += terminal[replacement]
-            results.append((candidate, p))
-        min_minus_log_prob = min(results, key=lambda x: x[1])
-        print(f"{min_minus_log_prob[0]}, {2 ** (-min_minus_log_prob[1])}")
-        return min_minus_log_prob[1]
+            if p < log_max:
+                results.append((candidate, p))
+        if len(results) == 0:
+            min_minus_log_prob = log_max
+        else:
+            _, min_minus_log_prob = min(results, key=lambda x: x[1])
+        return min_minus_log_prob
 
     def __init__(self, model_path: str):
         grammars, terminals = read_bpe(model_path=model_path)
@@ -163,25 +183,27 @@ class BpePcfgSim(MonteCarlo):
 
 def test():
     bpePcfg = BpePcfgSim(model_path="/home/cw/Documents/tmp/model")
-    samples = bpePcfg.sample()
+    samples = bpePcfg.sample(size=10000000)
     monte_carlo = MonteCarloLib(minus_log_prob_list=samples)
     while True:
         pwd = input("type in a password: ")
         if pwd == 'exit!':
-            break
+            sys.exit(0)
         prob = bpePcfg.calc_minus_log_prob(pwd=pwd)
-        monte_carlo.minus_log_prob2rank(prob)
+        print(f"prob: {2 ** (-prob)}", end=", ")
+        rank = monte_carlo.minus_log_prob2rank(prob)
+        print(f"rank: {rank}")
     pass
 
 
 def wrapper(model_path: str, testing_set: TextIO, save2: TextIO):
     # "/home/cw/Documents/tmp/model"
     bpePcfg = BpePcfgSim(model_path=model_path)
-    samples = bpePcfg.sample()
+    samples = bpePcfg.sample(size=10000000)
     # open("/home/cw/Documents/tmp/178_new.txt")
     scored = bpePcfg.parse_file(testing_set)
     monte_carlo = MonteCarloLib(minus_log_prob_list=samples)
-    monte_carlo.mlps2gc(scored, need_resort=True)
+    monte_carlo.mlps2gc(scored, need_resort=True, add1=False)
     # open("/home/cw/Documents/tmp/scored_178.txt", "w")
     monte_carlo.write2(save2)
 
@@ -189,6 +211,7 @@ def wrapper(model_path: str, testing_set: TextIO, save2: TextIO):
 
 
 if __name__ == '__main__':
+    # test()
     wrapper(model_path="/home/cw/Documents/tmp/model",
             testing_set=open("/home/cw/Documents/tmp/178_new.txt"),
             save2=open("/home/cw/Documents/tmp/scored_178.txt", "w"))

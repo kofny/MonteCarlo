@@ -11,7 +11,7 @@ import numpy
 from tqdm import tqdm
 
 from lib4mc.FileLib import wc_l
-from lib4mc.MonteCarloLIb import MonteCarloLib
+from lib4mc.MonteCarloLib import MonteCarloLib
 from lib4mc.MonteCarloParent import MonteCarlo
 from ngram.trainer import ngram_counter
 

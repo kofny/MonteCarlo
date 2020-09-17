@@ -18,9 +18,10 @@ def expand_1d(one_d_dict: Dict[Any, float], minus_log_based: bool = False) \
         -> Tuple[Dict[Any, float], List[Any], List[float]]:
     keys = list(one_d_dict.keys())
     cum_sums = numpy.array(list(one_d_dict.values())).cumsum()
+    n_one = one_d_dict
     if minus_log_based:
-        one_d_dict = {k: -log2(v) for k, v in one_d_dict.items()}
-    new_one_d_dict = (one_d_dict, keys, cum_sums)
+        n_one = {k: -log2(v) for k, v in one_d_dict.items()}
+    new_one_d_dict = (n_one, keys, cum_sums)
     return new_one_d_dict
 
 

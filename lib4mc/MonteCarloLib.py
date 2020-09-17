@@ -22,7 +22,6 @@ class MonteCarloLib:
         :return: minus_log_probs and corresponding ranks
         """
         minus_log_probs = numpy.fromiter(self.__minus_log_prob_list, float)
-        minus_log_probs.sort()
         logn = log2(len(minus_log_probs))
         positions = (2 ** (minus_log_probs - logn)).cumsum()
         return minus_log_probs, positions
@@ -32,10 +31,12 @@ class MonteCarloLib:
         idx = bisect.bisect_right(self.__minus_log_probs, minus_log_prob)
         return self.__positions[idx - 1] if idx > 0 else 1
 
-    def mlps2gc(self, minus_log_prob_iter: List[Tuple[str, int, float]], need_resort: bool = False) \
+    def mlps2gc(self, minus_log_prob_iter: List[Tuple[str, int, float]],
+                need_resort: bool = False, add1: bool = True) \
             -> List[Tuple[str, float, int, int, int, float]]:
         """
 
+        :param add1: rank is larger than previous one
         :param need_resort:
         :param minus_log_prob_iter: sorted
         :return:
@@ -46,9 +47,10 @@ class MonteCarloLib:
         prev_rank = 0
         cracked = 0
         total = sum([a for _, a, _ in minus_log_prob_iter])
+        addon = 1 if add1 else 0
         for pwd, appearance, mlp in tqdm(minus_log_prob_iter, desc="Ranking: "):
             idx = bisect.bisect_right(self.__minus_log_probs, mlp)
-            rank = ceil(max(self.__positions[idx - 1] if idx > 0 else 1, prev_rank + 1))
+            rank = ceil(max(self.__positions[idx - 1] if idx > 0 else 1, prev_rank + addon))
             cracked += appearance
             prev_rank = rank
             gc.append((pwd, mlp, appearance, rank, cracked, cracked / total * 100))

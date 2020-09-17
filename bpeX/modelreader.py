@@ -44,7 +44,7 @@ def read_grammars(gram_path: str):
     return structure_prob_dict
 
 
-def read_bpe(model_path: str) -> Tuple[Dict[Any, float], Dict[Tuple[str, int], Dict[str, float]]]:
+def read_bpe(model_path: str) -> Tuple[Dict[Any, float], Dict[Tuple[str, int], Dict[Any, float]]]:
     """
 
     :param model_path:

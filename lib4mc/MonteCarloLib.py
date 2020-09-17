@@ -1,6 +1,6 @@
 import bisect
 from math import log2, ceil
-from typing import List, Tuple, Iterator, TextIO
+from typing import List, Tuple, TextIO
 
 import numpy
 from tqdm import tqdm

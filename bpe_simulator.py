@@ -1,3 +1,4 @@
+import argparse
 import re
 import sys
 from collections import defaultdict
@@ -42,7 +43,7 @@ def luds(pwd: str):
     pass
 
 
-def count_luds(structures: Dict[str, float]) -> (Dict[Any, Set], Dict[str, set]):
+def count_luds(structures: Dict[Tuple, float]) -> (Dict[Any, Set], Dict[str, set]):
     skipped_list = []
     converts = defaultdict(set)
     for structure in structures:
@@ -66,9 +67,8 @@ def count_luds(structures: Dict[str, float]) -> (Dict[Any, Set], Dict[str, set])
             continue
         converts[parsed_structure].add(structure)
     novels = defaultdict(set)
-    print("Preprocess done!")
     for k in converts.keys():
-        novels[len(k)].add(k)
+        novels[sum([slen for _, slen in k])].add(k)
 
     def the_same(struct_a, struct_b) -> bool:
         if len(struct_a) != len(struct_b):
@@ -81,7 +81,8 @@ def count_luds(structures: Dict[str, float]) -> (Dict[Any, Set], Dict[str, set])
     struct_speedup = {}
     not_parsed = defaultdict(set)
     for skipped in tqdm(skipped_list, desc="Refining: "):
-        candidates = novels[len(skipped)]
+        len_skipped = sum([slen for _, slen in skipped])
+        candidates = novels[len_skipped]
         speed_skipped = []
         for s_tag, s_len in skipped:
             speed_skipped.extend([s_tag] * s_len)
@@ -113,9 +114,6 @@ class BpePcfgSim(MonteCarlo):
             p, replacement = pick_expand(target_terminal)
             prob += p
             pwd += replacement
-            # lst.append((replacement, 2 ** (-p)))
-        # lst.append((pwd, 2 ** (-prob)))
-        # print(lst)
         return prob, pwd
 
     def sample(self, size: int = 1000000) -> List[float]:
@@ -183,35 +181,46 @@ class BpePcfgSim(MonteCarlo):
 
 def test():
     bpePcfg = BpePcfgSim(model_path="/home/cw/Documents/tmp/model")
-    samples = bpePcfg.sample(size=10000000)
+    samples = bpePcfg.sample(size=1000000)
     monte_carlo = MonteCarloLib(minus_log_prob_list=samples)
     while True:
         pwd = input("type in a password: ")
         if pwd == 'exit!':
             sys.exit(0)
         prob = bpePcfg.calc_minus_log_prob(pwd=pwd)
-        print(f"prob: {2 ** (-prob)}", end=", ")
+        print(f"pwd: {pwd}, prob: {2 ** (-prob)}", end=", ")
         rank = monte_carlo.minus_log_prob2rank(prob)
         print(f"rank: {rank}")
     pass
 
 
-def wrapper(model_path: str, testing_set: TextIO, save2: TextIO):
+def wrapper(model_path: str, testing_set: TextIO, save2: TextIO, size: int = 1000000):
     # "/home/cw/Documents/tmp/model"
     bpePcfg = BpePcfgSim(model_path=model_path)
-    samples = bpePcfg.sample(size=10000000)
+    samples = bpePcfg.sample(size=size)
     # open("/home/cw/Documents/tmp/178_new.txt")
     scored = bpePcfg.parse_file(testing_set)
     monte_carlo = MonteCarloLib(minus_log_prob_list=samples)
-    monte_carlo.mlps2gc(scored, need_resort=True, add1=False)
+    monte_carlo.mlps2gc(scored, need_resort=True, add1=True)
     # open("/home/cw/Documents/tmp/scored_178.txt", "w")
     monte_carlo.write2(save2)
 
     pass
 
 
+def main():
+    cli = argparse.ArgumentParser("BPE PCFG Simulator")
+    cli.add_argument("-m", "--model", dest="model", type=str, required=True, help="model to be used for bpe")
+    cli.add_argument("-t", "--target", dest="target", type=argparse.FileType('r'), required=True,
+                     help="testing set to be parsed")
+    cli.add_argument("-s", "--save", dest="save", type=argparse.FileType('w'), required=True,
+                     help="save results to file")
+    cli.add_argument("--size", dest="size", type=int, required=False, default=1000000,
+                     help="sample size for Monte Carlo")
+    args = cli.parse_args()
+    wrapper(args.model, args.target, args.save, args.size)
+
+
 if __name__ == '__main__':
     # test()
-    wrapper(model_path="/home/cw/Documents/tmp/model",
-            testing_set=open("/home/cw/Documents/tmp/178_new.txt"),
-            save2=open("/home/cw/Documents/tmp/scored_178.txt", "w"))
+    main()

@@ -43,13 +43,6 @@ class NGramMonteCarlo(MonteCarlo):
         self.end_chr = end_chr
         pass
 
-    def sample(self, size: int = 100000) -> List[float]:
-        results = []
-        for _ in tqdm(iterable=range(size), desc="Sampling: "):
-            prob, pwd = self.sample_one()
-            results.append(prob)
-        return results
-
     def calc_minus_log_prob(self, pwd: str):
         n_pwd = pwd + self.end_chr
         log_prob = 0
@@ -95,26 +88,6 @@ class NGramMonteCarlo(MonteCarlo):
         obj.n, obj.end_chr, ngram_dict = pickle.load(model)
         obj.ngram_dict = expand(ngram_dict)
         return obj
-
-    def parse_file(self, testing_set: TextIO) -> List[Tuple[str, int, float]]:
-        """
-        get minus log prob for test set
-        :param testing_set: test set
-        :return: List of tuple (pwd, appearance, minus log prob)
-        """
-        line_num = wc_l(testing_set)
-        pwd_counter = defaultdict(int)
-        for line in tqdm(testing_set, desc="Counting: ", total=line_num):
-            line = line.strip("\r\n")
-            pwd_counter[line] += 1
-        res = []
-        for pwd, num in tqdm(pwd_counter.items(), desc="Parsing test: "):
-            _mlp = self.calc_minus_log_prob(pwd)
-            res.append((pwd, num, _mlp))
-        res = sorted(res, key=lambda x: x[2])
-        return res
-
-    pass
 
 
 def main():

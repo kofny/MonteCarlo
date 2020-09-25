@@ -116,27 +116,6 @@ class BpePcfgSim(MonteCarlo):
             pwd += replacement
         return prob, pwd
 
-    def sample(self, size: int = 1000000) -> List[float]:
-        results = []
-        for _ in tqdm(iterable=range(size), desc="Sampling: "):
-            prob, _ = self.sample_one()
-            results.append(prob)
-        return results
-
-    def parse_file(self, testing_set: TextIO) -> List[Tuple[str, int, float]]:
-        pwd_counter = defaultdict(int)
-        for line in testing_set:
-            pwd = line.strip("\r\n")
-            pwd_counter[pwd] += 1
-            # prob = self.calc_minus_log_prob(pwd)
-            pass
-        results = []
-        for pwd, cnt in tqdm(iterable=pwd_counter.items(), desc="Scoring: "):
-            prob = self.calc_minus_log_prob(pwd)
-            results.append((pwd, cnt, prob))
-        del pwd_counter
-        return results
-
     def calc_minus_log_prob(self, pwd: str) -> float:
         label = luds(pwd)
         candidate_structures = self.__converted.get(label, set())

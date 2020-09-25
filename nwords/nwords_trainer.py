@@ -14,7 +14,11 @@ def nwords_counter(nwords_list: TextIO, n: int = 4, end_chr: str = "\x03"):
     prefix_words = n - 1
     line_num = wc_l(nwords_list)
     section_dict = defaultdict(int)
+    limit = 1000
     for line in tqdm(nwords_list, total=line_num, desc="Parsing: "):  # type: str
+        limit -= 1
+        if limit < 0:
+            break
         line = line.strip("\r\n")
         items = line.split("\t")
         pwd = items[0]

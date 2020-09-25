@@ -1,14 +1,19 @@
+import sys
 from typing import TextIO
 
 
-def wc_l(file: TextIO):
+def wc_l(file: TextIO, new_line: str = "\n", silence: bool = False):
     """
     a pure function, file will not be closed and move the pointer to the begin
+    :param new_line: how to detect a new line
+    :param silence: show warnings
     :param file: file to count lines
     :return: number of lines
     """
-    file.seek(0)
-    new_line = "\n"
+    if file.seekable():
+        file.seek(0)
+    elif not silence:
+        print("WARNING: file cannot seekable", file=sys.stderr)
     buf_size = 8 * 1024 * 1024
     count = 0
     while True:
@@ -17,5 +22,6 @@ def wc_l(file: TextIO):
             count += 1
             break
         count += buffer.count(new_line)
-    file.seek(0)
+    if file.seekable():
+        file.seek(0)
     return count

@@ -118,8 +118,8 @@ class NGramMonteCarlo(MonteCarlo):
 
 
 def main():
-    for corpus in ["csdn", "rockyou", "webhost", "dodonew", "xato"]:
-        for n in [2, 3, 4, 5]:
+    for corpus in ["csdn"]:
+        for n in [4]:
             print(f"---------------------{corpus}-{n}gram--------------------------")
             ngram = NGramMonteCarlo(
                 pwd_list=open(f"/home/cw/Documents/Experiments/SegLab/Corpora/{corpus}-src.txt"),
@@ -131,7 +131,7 @@ def main():
             mc = MonteCarloLib(mlps)
             mc.mlps2gc(ll)
             mc.write2(
-                open(f"/home/cw/Documents/Experiments/SegLab/SimulatedNGram/{corpus}-{n}gram.txt", "w"))
+                open(f"./{corpus}-{n}gram.txt", "w"))
         pass
 
 

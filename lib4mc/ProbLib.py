@@ -1,5 +1,6 @@
 import bisect
 import random
+import sys
 from math import log2
 from typing import Dict, Tuple, List, Any
 
@@ -26,7 +27,11 @@ def expand_1d(one_d_dict: Dict[Any, float], minus_log_based: bool = False) \
 
 
 def pick_expand(expanded: Tuple[Dict[str, float], List[str], List[float]]) -> Tuple[float, str]:
-    items, keys, cum_sums = expanded
+    try:
+        items, keys, cum_sums = expanded
+    except TypeError:
+        print(expanded)
+        sys.exit(-1)
     total = cum_sums[-1]
     idx = bisect.bisect_right(cum_sums, random.uniform(0, total))
     k: str = keys[idx]

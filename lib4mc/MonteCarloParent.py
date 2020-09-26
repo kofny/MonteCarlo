@@ -1,5 +1,6 @@
 import abc
 from collections import defaultdict
+from math import log2
 from typing import List, TextIO, Tuple
 
 from tqdm import tqdm
@@ -8,6 +9,9 @@ from lib4mc.FileLib import wc_l
 
 
 class MonteCarlo(metaclass=abc.ABCMeta):
+    @staticmethod
+    def log2(prob: float) -> float:
+        return -log2(prob)
 
     @abc.abstractmethod
     def calc_minus_log_prob(self, pwd: str) -> float:
@@ -22,7 +26,7 @@ class MonteCarlo(metaclass=abc.ABCMeta):
     def sample_one(self) -> (float, str):
         return .0, ""
 
-    def sample(self, size: int) -> List[float]:
+    def sample(self, size: int = 100000) -> List[float]:
         results = []
         for _ in tqdm(iterable=range(size), desc="Sampling: "):
             prob, pwd = self.sample_one()

@@ -1,3 +1,4 @@
+import argparse
 import copy
 import sys
 from typing import TextIO, List
@@ -82,13 +83,18 @@ def test():
 
 
 def main():
-    for corpus in ["csdn", "rockyou", "dodonew", "webhost", "xato"]:
-        nwmc = NWords2MonteCarlo(open(f"/home/cw/Documents/Experiments/SegLab/NWords/{corpus}-rded.txt"), 4)
-        ml2p_list = nwmc.sample()
-        mc = MonteCarloLib(ml2p_list)
-        scored_testing = nwmc.parse_file(open(f"/home/cw/Documents/Experiments/SegLab/Corpora/{corpus}-tar.txt"))
-        mc.ml2p_iter2gc(minus_log_prob_iter=scored_testing)
-        mc.write2(open(f"./{corpus}-v2test4.pickle", "w"))
+    cli = argparse.ArgumentParser("NWords v2")
+    cli.add_argument("-f", "--file", dest="training", required=True, type=argparse.FileType("r"), help="training set")
+    cli.add_argument("-t", "--target", dest="testing", required=True, type=argparse.FileType("r"), help="testing set")
+    cli.add_argument("-s", "--save", dest="save", required=False, default=sys.stdout, type=argparse.FileType("w"),
+                     help="save results")
+    args = cli.parse_args()
+    nwmc = NWords2MonteCarlo(args.training, 4)
+    ml2p_list = nwmc.sample()
+    mc = MonteCarloLib(ml2p_list)
+    scored_testing = nwmc.parse_file(args.testing)
+    mc.ml2p_iter2gc(minus_log_prob_iter=scored_testing)
+    mc.write2(args.save)
 
 
 if __name__ == '__main__':

@@ -37,8 +37,8 @@ class NWords2MonteCarlo(MonteCarlo):
         prob_list = []
         self.__dfs(pwd + self.end_chr, prob_list, "", [], len(pwd) + len(self.end_chr))
         if len(prob_list) > 0:
-            print(prob_list)
-            return max([sum([self.minus_log2(p) for p in plist]) for plist in prob_list])
+            n_prob_list = [sum([self.minus_log2(p) for p in plist]) for plist in prob_list]
+            return min(n_prob_list)
         else:
             return self.minus_log2(sys.float_info.min)
         pass
@@ -82,13 +82,14 @@ def test():
 
 
 def main():
-    nwmc = NWords2MonteCarlo(open("/home/cw/Documents/Experiments/SegLab/NWords/csdn-rded.txt"), 4)
-    ml2p_list = nwmc.sample()
-    mc = MonteCarloLib(ml2p_list)
-    scored_testing = nwmc.parse_file(open("/home/cw/Documents/Experiments/SegLab/Corpora/csdn-tar.txt"))
-    mc.ml2p_iter2gc(minus_log_prob_iter=scored_testing)
-    mc.write2(open("./v2test4.pickle", "w"))
+    for corpus in ["csdn", "rockyou", "dodonew", "webhost", "xato"]:
+        nwmc = NWords2MonteCarlo(open(f"/home/cw/Documents/Experiments/SegLab/NWords/{corpus}-rded.txt"), 4)
+        ml2p_list = nwmc.sample()
+        mc = MonteCarloLib(ml2p_list)
+        scored_testing = nwmc.parse_file(open(f"/home/cw/Documents/Experiments/SegLab/Corpora/{corpus}-tar.txt"))
+        mc.ml2p_iter2gc(minus_log_prob_iter=scored_testing)
+        mc.write2(open(f"./{corpus}-v2test4.pickle", "w"))
 
 
 if __name__ == '__main__':
-    test()
+    main()

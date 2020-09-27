@@ -54,7 +54,7 @@ class NWordsMonteCarlo(MonteCarlo):
         if len(probabilities) == 0:
             return self.minus_log2(sys.float_info.min)
         else:
-            return max(probabilities)
+            return min(probabilities)
 
     def sample1(self) -> (float, str):
         pwd = tuple()

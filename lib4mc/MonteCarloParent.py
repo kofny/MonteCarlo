@@ -14,7 +14,7 @@ class MonteCarlo(metaclass=abc.ABCMeta):
         return -log2(prob)
 
     @abc.abstractmethod
-    def calc_minus_log_prob(self, pwd: str) -> float:
+    def calc_ml2p(self, pwd: str) -> float:
         """
 
         :param pwd: password
@@ -23,13 +23,17 @@ class MonteCarlo(metaclass=abc.ABCMeta):
         return .0
 
     @abc.abstractmethod
-    def sample_one(self) -> (float, str):
+    def sample1(self) -> (float, str):
+        """
+        get one sample
+        :return: (prob, sample)
+        """
         return .0, ""
 
     def sample(self, size: int = 100000) -> List[float]:
         results = []
         for _ in tqdm(iterable=range(size), desc="Sampling: "):
-            prob, pwd = self.sample_one()
+            prob, pwd = self.sample1()
             results.append(prob)
         return results
 
@@ -46,7 +50,7 @@ class MonteCarlo(metaclass=abc.ABCMeta):
             pwd_counter[line] += 1
         res: List[Tuple[str, int, float]] = []
         for pwd, num in tqdm(pwd_counter.items(), desc="Parsing test: "):
-            _mlp = self.calc_minus_log_prob(pwd)
+            _mlp = self.calc_ml2p(pwd)
             res.append((pwd, num, _mlp))
         res = sorted(res, key=lambda x: x[2])
         return res

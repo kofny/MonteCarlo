@@ -44,9 +44,9 @@ class NWordsMonteCarlo(MonteCarlo):
                 container.pop()
                 probabilities.pop()
 
-    def calc_minus_log_prob(self, pwd: str) -> float:
+    def calc_ml2p(self, pwd: str) -> float:
         possible_list = []
-        self.__structures(pwd + "\x03", possible_list, [], [], len(pwd) + 1)
+        self.__structures(pwd + self.end_chr, possible_list, [], [], len(pwd) + len(self.end_chr))
         probabilities = []
         for possible in possible_list:
             prob = sum([self.minus_log2(p) for _, p in possible])
@@ -56,7 +56,7 @@ class NWordsMonteCarlo(MonteCarlo):
         else:
             return max(probabilities)
 
-    def sample_one(self) -> (float, str):
+    def sample1(self) -> (float, str):
         pwd = tuple()
         prob = .0
         pwd_len = 0

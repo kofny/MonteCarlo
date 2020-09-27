@@ -102,7 +102,7 @@ def count_luds(structures: Dict[Tuple, float]) -> (Dict[Any, Set], Dict[str, set
 
 
 class BpePcfgSim(MonteCarlo):
-    def sample_one(self) -> (float, str):
+    def sample1(self) -> (float, str):
         pwd = ""
         prob = .0
         p, struct = pick_expand(self.__grammars)
@@ -115,7 +115,7 @@ class BpePcfgSim(MonteCarlo):
             pwd += replacement
         return prob, pwd
 
-    def calc_minus_log_prob(self, pwd: str) -> float:
+    def calc_ml2p(self, pwd: str) -> float:
         label = luds(pwd)
         candidate_structures = self.__converted.get(label, set())
         log_max = self.minus_log2(sys.float_info.min)
@@ -165,7 +165,7 @@ def test():
         pwd = input("type in a password: ")
         if pwd == 'exit!':
             sys.exit(0)
-        prob = bpePcfg.calc_minus_log_prob(pwd=pwd)
+        prob = bpePcfg.calc_ml2p(pwd=pwd)
         print(f"pwd: {pwd}, prob: {2 ** (-prob)}", end=", ")
         rank = monte_carlo.minus_log_prob2rank(prob)
         print(f"rank: {rank}")

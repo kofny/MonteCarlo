@@ -39,7 +39,7 @@ class NGramMonteCarlo(MonteCarlo):
         self.end_chr = end_chr
         pass
 
-    def calc_minus_log_prob(self, pwd: str):
+    def calc_ml2p(self, pwd: str):
         n_pwd = pwd + self.end_chr
         log_prob = 0
         for i, c in enumerate(n_pwd):
@@ -55,7 +55,7 @@ class NGramMonteCarlo(MonteCarlo):
             # log_prob += self.ngram_dict.get(prefix, [{}])[0].get(c, 10000)
         return log_prob
 
-    def sample_one(self) -> Tuple[float, str]:
+    def sample1(self) -> Tuple[float, str]:
         pwd = ""
         prob = .0
         while True:

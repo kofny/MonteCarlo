@@ -2,7 +2,6 @@
 N words
 """
 from collections import defaultdict
-from math import log2
 from typing import TextIO, Dict, Tuple
 
 from tqdm import tqdm
@@ -10,7 +9,7 @@ from tqdm import tqdm
 from lib4mc.FileLib import wc_l
 
 
-def nwords_counter(nwords_list: TextIO, n: int = 4, end_chr: str = "\x03", minus_log2: bool = False):
+def nwords_counter(nwords_list: TextIO, n: int = 4, end_chr: str = "\x03"):
     nwords_dict: Dict[Tuple, Dict[str, int]] = defaultdict(lambda: defaultdict(int))
     prefix_words = n - 1
     line_num = wc_l(nwords_list)
@@ -46,10 +45,7 @@ def nwords_counter(nwords_list: TextIO, n: int = 4, end_chr: str = "\x03", minus
         nwords_float_dict[prefix] = {}
         total = sum(ends.values())
         for e, v in ends.items():
-            if minus_log2:
-                nwords_float_dict[prefix][e] = -log2(v / total)
-            else:
-                nwords_float_dict[prefix][e] = (v / total)
+            nwords_float_dict[prefix][e] = (v / total)
     del nwords_dict
     return nwords_float_dict, words
 

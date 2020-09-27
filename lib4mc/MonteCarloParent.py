@@ -10,7 +10,7 @@ from lib4mc.FileLib import wc_l
 
 class MonteCarlo(metaclass=abc.ABCMeta):
     @staticmethod
-    def log2(prob: float) -> float:
+    def minus_log2(prob: float) -> float:
         return -log2(prob)
 
     @abc.abstractmethod

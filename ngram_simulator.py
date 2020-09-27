@@ -3,14 +3,10 @@ import os
 import pickle
 import random
 import sys
-from collections import defaultdict
-from math import log2
 from typing import TextIO, BinaryIO, Dict, List, Tuple
 
 import numpy
-from tqdm import tqdm
 
-from lib4mc.FileLib import wc_l
 from lib4mc.MonteCarloLib import MonteCarloLib
 from lib4mc.MonteCarloParent import MonteCarlo
 from ngram.trainer import ngram_counter
@@ -55,7 +51,7 @@ class NGramMonteCarlo(MonteCarlo):
             if c not in addons:
                 return sys.maxsize
             prob = addons.get(c)
-            log_prob -= log2(prob)
+            log_prob += self.minus_log2(prob)
             # log_prob += self.ngram_dict.get(prefix, [{}])[0].get(c, 10000)
         return log_prob
 
@@ -67,7 +63,7 @@ class NGramMonteCarlo(MonteCarlo):
                 p, addon = pick_expand(self.ngram_dict.get(pwd))
             else:
                 p, addon = pick_expand(self.ngram_dict.get(pwd[1 - self.n:]))
-            prob -= log2(p)
+            prob += self.minus_log2(p)
             if addon == self.end_chr:
                 if len(pwd) > 3:
                     break

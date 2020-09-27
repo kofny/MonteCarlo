@@ -3,7 +3,6 @@ Simulator for N Words
 """
 import copy
 import sys
-from math import log2
 from typing import TextIO, List
 
 from lib4mc.MonteCarloLib import MonteCarloLib
@@ -14,8 +13,7 @@ from nwords.nwords_trainer import nwords_counter
 
 class NWordsMonteCarlo(MonteCarlo):
     def __init__(self, training_set: TextIO, n: int, end_chr: str = "\x03"):
-        nwords, words = nwords_counter(training_set, n, end_chr, minus_log2=False)
-        # nwords.get(tuple()).g
+        nwords, words = nwords_counter(training_set, n, end_chr)
         self.__nwords = expand_2d(nwords)
         self.__n = n
         self.__words = words
@@ -51,10 +49,10 @@ class NWordsMonteCarlo(MonteCarlo):
         self.__structures(pwd + "\x03", possible_list, [], [], len(pwd) + 1)
         probabilities = []
         for possible in possible_list:
-            prob = sum([-log2(p) for _, p in possible])
+            prob = sum([self.minus_log2(p) for _, p in possible])
             probabilities.append(prob)
         if len(probabilities) == 0:
-            return -log2(sys.float_info.min)
+            return self.minus_log2(sys.float_info.min)
         else:
             return max(probabilities)
 
@@ -67,7 +65,7 @@ class NWordsMonteCarlo(MonteCarlo):
                 p, addon = pick_expand(self.__nwords.get(pwd))
             else:
                 p, addon = pick_expand(self.__nwords.get(tuple(pwd[1 - self.__n:])))
-            prob -= log2(p)
+            prob += self.minus_log2(p)
             if addon == self.end_chr:
                 if pwd_len >= self.__n:
                     break

@@ -2,8 +2,7 @@ import argparse
 import re
 import sys
 from collections import defaultdict
-from math import log2
-from typing import TextIO, List, Tuple, Dict, Any, Set
+from typing import TextIO, Tuple, Dict, Any, Set
 
 from tqdm import tqdm
 
@@ -119,7 +118,7 @@ class BpePcfgSim(MonteCarlo):
     def calc_minus_log_prob(self, pwd: str) -> float:
         label = luds(pwd)
         candidate_structures = self.__converted.get(label, set())
-        log_max = log2(sys.float_info.max)
+        log_max = self.minus_log2(sys.float_info.min)
         if len(candidate_structures) == 0:
             length = sum([_len for _, _len in label])
             addon_candidate_structures = self.__not_parsed.get(length, set())

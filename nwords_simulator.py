@@ -88,6 +88,6 @@ if __name__ == '__main__':
     ml2p_list = nwmc.sample()
     mc = MonteCarloLib(ml2p_list)
     scored_testing = nwmc.parse_file(open("/home/cw/Documents/Experiments/SegLab/Corpora/csdn-tar.txt"))
-    ranked = mc.mlps2gc(minus_log_prob_iter=scored_testing)
+    ranked = mc.ml2p_iter2gc(minus_log_prob_iter=scored_testing)
     mc.write2(open("./test2.pickle", "w"))
     # print(nwmc.sample_one())

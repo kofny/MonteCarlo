@@ -37,6 +37,7 @@ class NWords2MonteCarlo(MonteCarlo):
         prob_list = []
         self.__dfs(pwd + self.end_chr, prob_list, "", [], len(pwd) + len(self.end_chr))
         if len(prob_list) > 0:
+            print(prob_list)
             return max([sum([self.minus_log2(p) for p in plist]) for plist in prob_list])
         else:
             return self.minus_log2(sys.float_info.min)
@@ -67,10 +68,27 @@ class NWords2MonteCarlo(MonteCarlo):
         return prob, pwd
 
 
-if __name__ == '__main__':
+def test():
+    nwmc = NWords2MonteCarlo(open("/home/cw/Documents/Experiments/SegLab/NWords/csdn-rded.txt"), 4)
+    ml2p_list = nwmc.sample()
+    mc = MonteCarloLib(ml2p_list)
+    ipt = ""
+    while ipt != "exit":
+        ipt = input("Enter password: ")
+        ml2p = nwmc.calc_ml2p(ipt)
+        print(ml2p)
+        print(mc.ml2p2rank(ml2p))
+    pass
+
+
+def main():
     nwmc = NWords2MonteCarlo(open("/home/cw/Documents/Experiments/SegLab/NWords/csdn-rded.txt"), 4)
     ml2p_list = nwmc.sample()
     mc = MonteCarloLib(ml2p_list)
     scored_testing = nwmc.parse_file(open("/home/cw/Documents/Experiments/SegLab/Corpora/csdn-tar.txt"))
-    ranked = mc.mlps2gc(minus_log_prob_iter=scored_testing)
+    mc.ml2p_iter2gc(minus_log_prob_iter=scored_testing)
     mc.write2(open("./v2test4.pickle", "w"))
+
+
+if __name__ == '__main__':
+    test()

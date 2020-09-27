@@ -27,12 +27,12 @@ class MonteCarloLib:
         return minus_log_probs, positions
         pass
 
-    def minus_log_prob2rank(self, minus_log_prob):
+    def ml2p2rank(self, minus_log_prob):
         idx = bisect.bisect_right(self.__minus_log_probs, minus_log_prob)
         return self.__positions[idx - 1] if idx > 0 else 1
 
-    def mlps2gc(self, minus_log_prob_iter: List[Tuple[str, int, float]],
-                need_resort: bool = False, add1: bool = True) \
+    def ml2p_iter2gc(self, minus_log_prob_iter: List[Tuple[str, int, float]],
+                     need_resort: bool = False, add1: bool = True) \
             -> List[Tuple[str, float, int, int, int, float]]:
         """
 

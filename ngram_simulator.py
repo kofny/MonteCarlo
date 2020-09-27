@@ -98,7 +98,7 @@ def main():
             ll = ngram.parse_file(
                 open(f"/home/cw/Documents/Experiments/SegLab/Corpora/{corpus}-tar.txt"))
             mc = MonteCarloLib(mlps)
-            mc.mlps2gc(ll)
+            mc.ml2p_iter2gc(ll)
             mc.write2(
                 open(f"./{corpus}-{n}gram.txt", "w"))
         pass

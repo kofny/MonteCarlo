@@ -167,7 +167,7 @@ def test():
             sys.exit(0)
         prob = bpePcfg.calc_ml2p(pwd=pwd)
         print(f"pwd: {pwd}, prob: {2 ** (-prob)}", end=", ")
-        rank = monte_carlo.minus_log_prob2rank(prob)
+        rank = monte_carlo.ml2p2rank(prob)
         print(f"rank: {rank}")
     pass
 
@@ -179,7 +179,7 @@ def wrapper(model_path: str, testing_set: TextIO, save2: TextIO, size: int = 100
     # open("/home/cw/Documents/tmp/178_new.txt")
     scored = bpePcfg.parse_file(testing_set)
     monte_carlo = MonteCarloLib(minus_log_prob_list=samples)
-    monte_carlo.mlps2gc(scored, need_resort=True, add1=True)
+    monte_carlo.ml2p_iter2gc(scored, need_resort=True, add1=True)
     # open("/home/cw/Documents/tmp/scored_178.txt", "w")
     monte_carlo.write2(save2)
 

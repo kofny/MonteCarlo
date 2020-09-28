@@ -19,7 +19,7 @@ class NWords2MonteCarlo(MonteCarlo):
         self.__word_max_len = max(words.values())
         pass
 
-    def __dfs(self, pwd: str, prob_list: List[List], container: str, probabilities: List, target_len: int):
+    def __dfs(self, pwd: str, min_ml2prob: float, container: str, probability: float, target_len: int):
         for index in range(1, len(pwd) + 1, 1):
             left = pwd[0:index]
             len_container = len(container)
@@ -28,21 +28,35 @@ class NWords2MonteCarlo(MonteCarlo):
             else:
                 prev = container[1 - self.__n:]
             if prev in self.__nwords and left in self.__nwords.get(prev)[0]:
-                probabilities.append(self.__nwords.get(prev)[0].get(left))
+                # probabilities.append(self.__nwords.get(prev)[0].get(left))
+                prob = self.__nwords.get(prev)[0].get(left)
+                n_prob = probability + prob
                 if len(container) + index == target_len:
-                    prob_list.append(copy.deepcopy(probabilities))
-                self.__dfs(pwd[index:], prob_list, container + left, probabilities, target_len)
-                probabilities.pop()
+                    if n_prob < min_ml2prob:
+                        min_ml2prob = n_prob
+                self.__dfs(pwd[index:], min_ml2prob, container + left, probability + prob, target_len)
+                # probabilities.pop()
 
     def calc_ml2p(self, pwd: str) -> float:
-        prob_list = []
-        self.__dfs(pwd + self.end_chr, prob_list, "", [], len(pwd) + len(self.end_chr))
-        if len(prob_list) > 0:
-            n_prob_list = [sum([self.minus_log2(p) for p in plist]) for plist in prob_list]
-            return min(n_prob_list)
+        min_ml2prob = self.minus_log2(sys.float_info.min)
+        if len(pwd) <= 30:
+            self.__dfs(pwd + self.end_chr, min_ml2prob, "", 0, len(pwd) + len(self.end_chr))
         else:
-            return self.minus_log2(sys.float_info.min)
-        pass
+            n_pwd = pwd + self.end_chr
+            log_prob = 0
+            for i, c in enumerate(n_pwd):
+                if i < self.__n:
+                    prefix = n_pwd[:i]
+                else:
+                    prefix = n_pwd[i - self.__n + 1:i]
+                addons = self.__nwords.get(prefix, [{}])[0]
+                if c not in addons:
+                    return sys.maxsize
+                prob = addons.get(c)
+                log_prob += self.minus_log2(prob)
+            if min_ml2prob > log_prob:
+                min_ml2prob = log_prob
+        return min_ml2prob
 
     def sample1(self) -> (float, str):
         pwd = ""

@@ -1,7 +1,6 @@
 import argparse
-import copy
 import sys
-from typing import TextIO, List
+from typing import TextIO
 
 from lib4mc.MonteCarloLib import MonteCarloLib
 from lib4mc.MonteCarloParent import MonteCarlo

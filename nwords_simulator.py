@@ -1,6 +1,7 @@
 """
 Simulator for N Words
 """
+import argparse
 import copy
 import sys
 from typing import TextIO, List
@@ -12,8 +13,9 @@ from nwords.nwords_trainer import nwords_counter
 
 
 class NWordsMonteCarlo(MonteCarlo):
-    def __init__(self, training_set: TextIO, n: int, end_chr: str = "\x03"):
-        nwords, words = nwords_counter(training_set, n, end_chr)
+    def __init__(self, training_set: TextIO, n: int, splitter: str, start4word: int, skip4word: int,
+                 end_chr: str = "\x03"):
+        nwords, words = nwords_counter(training_set, n, splitter, end_chr, start4word, skip4word)
         self.__nwords = expand_2d(nwords)
         self.__n = n
         self.__words = words
@@ -54,7 +56,8 @@ class NWordsMonteCarlo(MonteCarlo):
         if len(probabilities) == 0:
             return self.minus_log2(sys.float_info.min)
         else:
-            return min(probabilities)
+            min_prob = min(probabilities)
+            return min_prob
 
     def sample1(self) -> (float, str):
         pwd = tuple()
@@ -84,10 +87,26 @@ class NWordsMonteCarlo(MonteCarlo):
 
 
 if __name__ == '__main__':
-    nwmc = NWordsMonteCarlo(open("/home/cw/Documents/Experiments/SegLab/NWords/csdn-rded.txt"), 2)
-    ml2p_list = nwmc.sample()
+    cli = argparse.ArgumentParser("N words simulator")
+    cli.add_argument("-i", "--input", dest="input", type=argparse.FileType('r'), required=True, help="nwords file")
+    cli.add_argument("-t", "--test", dest="test", type=argparse.FileType('r'), required=True, help="testing file")
+    cli.add_argument("-s", "--save", dest="save", type=argparse.FileType('w'), required=True,
+                     help="save Monte Carlo results here")
+    cli.add_argument("-n", "--ngram", dest="ngram", type=int, required=False, default=2, choices=[2, 3, 4, 5, 6],
+                     help="ngram")
+    cli.add_argument("--size", dest="size", type=int, required=False, default=100000, help="sample size")
+    cli.add_argument("--splitter", dest="splitter", type=str, required=False, default="\t", help="splitter")
+    cli.add_argument("--start4word", dest="start4word", type=int, required=False, default=1,
+                     help="start index for words")
+    cli.add_argument("--skip4word", dest="skip4word", type=int, required=False, default=0,
+                     help="step between two words")
+    args = cli.parse_args()
+
+    nword_mc = NWordsMonteCarlo(args.input, splitter=args.splitter, n=args.ngram, start4word=args.start4word,
+                                skip4word=args.skip4word)
+    ml2p_list = nword_mc.sample(size=args.size)
     mc = MonteCarloLib(ml2p_list)
-    scored_testing = nwmc.parse_file(open("/home/cw/Documents/Experiments/SegLab/Corpora/csdn-tar.txt"))
+    scored_testing = nword_mc.parse_file(args.test)
     ranked = mc.ml2p_iter2gc(minus_log_prob_iter=scored_testing)
-    mc.write2(open("./test2.pickle", "w"))
-    # print(nwmc.sample_one())
+    mc.write2(args.save)
+    pass

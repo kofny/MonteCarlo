@@ -30,7 +30,7 @@ class MonteCarlo(metaclass=abc.ABCMeta):
         """
         return .0, ""
 
-    def sample(self, size: int = 100000) -> List[float]:
+    def sample(self, size: int) -> List[float]:
         results = []
         for _ in tqdm(iterable=range(size), desc="Sampling: "):
             prob, pwd = self.sample1()

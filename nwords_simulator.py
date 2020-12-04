@@ -91,7 +91,7 @@ class NWordsMonteCarlo(MonteCarlo):
         return prob, "".join(pwd)
 
 
-if __name__ == '__main__':
+def wrapper():
     cli = argparse.ArgumentParser("N words simulator")
     cli.add_argument("-i", "--input", dest="input", type=argparse.FileType('r'), required=True, help="nwords file")
     cli.add_argument("-t", "--test", dest="test", type=argparse.FileType('r'), required=True, help="testing file")
@@ -114,6 +114,11 @@ if __name__ == '__main__':
     ml2p_list = nword_mc.sample(size=args.size)
     mc = MonteCarloLib(ml2p_list)
     scored_testing = nword_mc.parse_file(args.test)
-    ranked = mc.ml2p_iter2gc(minus_log_prob_iter=scored_testing)
+    mc.ml2p_iter2gc(minus_log_prob_iter=scored_testing)
     mc.write2(args.save)
+    pass
+
+
+if __name__ == '__main__':
+    wrapper()
     pass

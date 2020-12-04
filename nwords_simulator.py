@@ -4,7 +4,7 @@ Simulator for N Words
 import argparse
 import copy
 import sys
-from typing import TextIO, List
+from typing import TextIO, List, Union, Tuple
 
 from lib4mc.MonteCarloLib import MonteCarloLib
 from lib4mc.MonteCarloParent import MonteCarlo
@@ -13,30 +13,35 @@ from nwords.nwords_trainer import nwords_counter
 
 
 class NWordsMonteCarlo(MonteCarlo):
-    def __init__(self, training_set: TextIO, n: int, splitter: str, start4word: int, skip4word: int,
+    def __init__(self, training_set: Union[TextIO, None], n: int = 2, splitter: str = ' ', start4word: int = 0,
+                 skip4word: int = 1,
                  end_chr: str = "\x03"):
+        if training_set is None:
+            return
         nwords, words = nwords_counter(training_set, n, splitter, end_chr, start4word, skip4word)
-        self.__nwords = expand_2d(nwords)
+        self.nwords = expand_2d(nwords)
         self.__n = n
-        self.__words = words
+        self.words = words
         self.end_chr = end_chr
-        self.__word_max_len = max(words.values())
+        self.min_len = 4
         print("Preparing Done", file=sys.stderr)
         pass
+
+    def _get_prefix(self, pwd: Union[List, Tuple]):
+        if len(pwd) < self.__n:
+            return tuple(pwd)
+        else:
+            return tuple(pwd[1 - self.__n:])
 
     def __structures(self, pwd, possible_list: List[List], container: List, probabilities: List, target_len: int):
 
         for index in range(1, len(pwd) + 1):
             left = pwd[0:index]
-            if left in self.__words:
-                if len(container) < self.__n:
-                    prev = tuple(container)
-                else:
-                    prev = tuple(container[1 - self.__n:])
-                if prev in self.__nwords and left in self.__nwords.get(prev)[0]:
-                    # container.append((left, self.__nwords.get(prev)[0].get(left)))
+            if left in self.words:
+                prev = self._get_prefix(container)
+                if prev in self.nwords and left in self.nwords.get(prev)[0]:
                     container.append(left)
-                    probabilities.append(self.__nwords.get(prev)[0].get(left))
+                    probabilities.append(self.nwords.get(prev)[0].get(left))
                 else:
                     continue
                 if len("".join(container)) == target_len:
@@ -64,17 +69,16 @@ class NWordsMonteCarlo(MonteCarlo):
         prob = .0
         pwd_len = 0
         while True:
-            if len(pwd) < self.__n:
-                p, addon = pick_expand(self.__nwords.get(pwd))
-            else:
-                p, addon = pick_expand(self.__nwords.get(tuple(pwd[1 - self.__n:])))
+            tar = self._get_prefix(pwd)
+            p, addon = pick_expand(self.nwords.get(tar))
             prob += self.minus_log2(p)
             if addon == self.end_chr:
-                if pwd_len >= self.__n:
+                if pwd_len >= self.min_len:
                     break
                 else:
                     pwd = tuple()
                     prob = .0
+                    pwd_len = 0
                     continue
             _tmp = list(pwd)
             _tmp.append(addon)
@@ -83,6 +87,7 @@ class NWordsMonteCarlo(MonteCarlo):
             if pwd_len >= 256:
                 pwd = tuple()
                 prob = .0
+                pwd_len = 0
         return prob, "".join(pwd)
 
 
@@ -95,13 +100,15 @@ if __name__ == '__main__':
     cli.add_argument("-n", "--ngram", dest="ngram", type=int, required=False, default=2, choices=[2, 3, 4, 5, 6],
                      help="ngram")
     cli.add_argument("--size", dest="size", type=int, required=False, default=100000, help="sample size")
-    cli.add_argument("--splitter", dest="splitter", type=str, required=False, default="\t", help="splitter")
-    cli.add_argument("--start4word", dest="start4word", type=int, required=False, default=1,
+    cli.add_argument("--splitter", dest="splitter", type=str, required=False, default="\t",
+                     help="splitter, set empty if splitting the password char by char")
+    cli.add_argument("--start4word", dest="start4word", type=int, required=False, default=0,
                      help="start index for words")
-    cli.add_argument("--skip4word", dest="skip4word", type=int, required=False, default=0,
+    cli.add_argument("--skip4word", dest="skip4word", type=int, required=False, default=1,
                      help="step between two words")
     args = cli.parse_args()
-
+    if args.splitter == 'empty':
+        args.splitter = ''
     nword_mc = NWordsMonteCarlo(args.input, splitter=args.splitter, n=args.ngram, start4word=args.start4word,
                                 skip4word=args.skip4word)
     ml2p_list = nword_mc.sample(size=args.size)

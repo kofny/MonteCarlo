@@ -1,6 +1,7 @@
 """
 N words
 """
+import re
 from collections import defaultdict
 from typing import TextIO, Dict, Tuple
 
@@ -11,7 +12,9 @@ from lib4mc.FileLib import wc_l
 
 def parse_line(line: str, splitter: str, start4words: int, skip4words: int):
     line = line.strip("\r\n")
-    items = line.split(splitter)
+    if splitter == '':
+        return list(line)
+    items = re.split(splitter, line)
     words = items[start4words:len(items):skip4words]
     return words
 
@@ -46,5 +49,3 @@ def nwords_counter(nwords_list: TextIO, n: int, splitter: str, end_chr: str, sta
             nwords_float_dict[prefix][e] = (v / total)
     del nwords_dict
     return nwords_float_dict, words
-
-

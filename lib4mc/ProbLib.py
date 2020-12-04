@@ -11,6 +11,8 @@ def expand_2d(two_d_dict: Dict[Any, Dict[Any, float]], minus_log_based: bool = F
         -> Dict[Any, Tuple[Dict[Any, float], List[Any], List[float]]]:
     new_two_d_dict = {}
     for k, items in two_d_dict.items():
+        if len(items) == 0:
+            continue
         new_two_d_dict[k] = expand_1d(items, minus_log_based=minus_log_based)
     return new_two_d_dict
 
@@ -32,6 +34,9 @@ def pick_expand(expanded: Tuple[Dict[str, float], List[str], List[float]]) -> Tu
     except TypeError:
         print(expanded)
         sys.exit(-1)
+    if len(cum_sums) < 1:
+        print(keys)
+        pass
     total = cum_sums[-1]
     idx = bisect.bisect_right(cum_sums, random.uniform(0, total))
     k: str = keys[idx]

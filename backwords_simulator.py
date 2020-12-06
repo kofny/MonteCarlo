@@ -1,6 +1,4 @@
 import argparse
-import sys
-from math import log2
 from typing import TextIO, Union, List, Tuple
 
 from backwords.backwords_trainer import backwords_counter
@@ -10,25 +8,24 @@ from nwords_simulator import NWordsMonteCarlo
 
 
 class BackWordsMonteCarlo(NWordsMonteCarlo):
-    def __init__(self, training_set: TextIO, min_gram: int, max_gram, splitter: str, start4word: int, skip4word: int,
-                 threshold: int, end_chr: str = "\x03"):
+    def __init__(self, training_set: TextIO, splitter: str, start4word: int, skip4word: int,
+                 threshold: int, start_chr: str = '\x00', end_chr: str = "\x03"):
         super().__init__(None)
-        backwords, words = backwords_counter(training_set, min_gram, max_gram, splitter, end_chr, start4word, skip4word,
+        backwords, words = backwords_counter(training_set, splitter, start_chr, end_chr, start4word, skip4word,
                                              threshold=threshold)
         self.nwords = expand_2d(backwords)
         self.end_chr = end_chr
         self.words = words
-        self.min_gram = min_gram
-        self.max_gram = max_gram
         self.min_len = 4
+        self.default_start = start_chr
+        self.start_chr = start_chr
 
-    def _get_prefix(self, pwd: Union[List, Tuple]):
-        if len(pwd) < self.min_gram:
-            return tuple(pwd)
-        tar = None
-        for i in range(max(0, len(pwd) - self.max_gram), len(pwd)):
+    def _get_prefix(self, pwd: Union[List, Tuple], transition: str):
+        tar = (self.default_start,)
+        for i in range(0, len(pwd)):
             tmp_tar = tuple(pwd[i:])
-            if tmp_tar not in self.nwords:
+            if tmp_tar not in self.nwords or \
+                    (transition != "" and transition not in self.nwords.get(tmp_tar)[0]):
                 continue
             tar = tmp_tar
             break
@@ -62,10 +59,9 @@ def wrapper():
     args = cli.parse_args()
     if args.splitter == 'empty':
         args.splitter = ''
-    backword_mc = BackWordsMonteCarlo(args.input, splitter=args.splitter, min_gram=args.min_gram,
-                                      max_gram=args.max_gram, start4word=args.start4word, skip4word=args.skip4word,
+    backword_mc = BackWordsMonteCarlo(args.input, splitter=args.splitter, start4word=args.start4word,
+                                      skip4word=args.skip4word,
                                       threshold=args.threshold)
-    ml2p_list = backword_mc.sample(size=args.size)
     if args.debug_mode:
         usr_i = ""
         while usr_i != "exit":
@@ -73,6 +69,7 @@ def wrapper():
             prob = backword_mc.calc_ml2p(usr_i)
             print(prob)
         return
+    ml2p_list = backword_mc.sample(size=args.size)
     mc = MonteCarloLib(ml2p_list)
     scored_testing = backword_mc.parse_file(args.test)
     mc.ml2p_iter2gc(minus_log_prob_iter=scored_testing)

@@ -20,7 +20,7 @@ def parse_line(line: str, splitter: str, start4words: int, skip4words: int):
 
 
 def nwords_counter(nwords_list: TextIO, n: int, splitter: str, end_chr: str, start4words: int,
-                   skip4words: int):
+                   skip4words: int, start_chr: str = '\x00'):
     nwords_dict: Dict[Tuple, Dict[str, int]] = defaultdict(lambda: defaultdict(int))
     prefix_words = n - 1
     line_num = wc_l(nwords_list)
@@ -28,18 +28,19 @@ def nwords_counter(nwords_list: TextIO, n: int, splitter: str, end_chr: str, sta
     words: Dict[str, int] = defaultdict(int)
     for line in tqdm(nwords_list, total=line_num, desc="Parsing: "):  # type: str
         line = line.strip("\r\n")
-        sections = parse_line(line, splitter, start4words, skip4words)
+        sections = [start_chr]
+        sections.extend(parse_line(line, splitter, start4words, skip4words))
         sections.append(end_chr)
         for sec in sections:
             words[sec] += 1
         section_dict[tuple(sections)] += 1
     nwords_list.close()
     for sections, cnt in tqdm(section_dict.items(), desc="Counting: "):
-        for i, sec in enumerate(sections):
-            if i <= prefix_words:
-                nwords_dict[tuple(sections[:i])][sections[i]] += cnt
-            else:
-                nwords_dict[tuple(sections[i - prefix_words:i])][sections[i]] += cnt
+        prefix_words_num = n - 1
+        for i in range(len(sections) - prefix_words_num):
+            grams = tuple(sections[i:i + prefix_words_num])
+            transition = sections[i + n]
+            nwords_dict[grams][transition] += cnt
     del section_dict
     nwords_float_dict: Dict[Tuple, Dict[str, float]] = {}
     for prefix, ends in tqdm(nwords_dict.items(), "Converting: "):

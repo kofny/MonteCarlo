@@ -4,6 +4,7 @@ Simulator for N Words
 import argparse
 import copy
 import sys
+from math import log2
 from typing import TextIO, List, Union, Tuple
 
 from lib4mc.MonteCarloLib import MonteCarloLib
@@ -14,20 +15,23 @@ from nwords.nwords_trainer import nwords_counter
 
 class NWordsMonteCarlo(MonteCarlo):
     def __init__(self, training_set: Union[TextIO, None], n: int = 2, splitter: str = ' ', start4word: int = 0,
-                 skip4word: int = 1,
+                 skip4word: int = 1, start_chr="\x00",
                  end_chr: str = "\x03"):
         if training_set is None:
             return
-        nwords, words = nwords_counter(training_set, n, splitter, end_chr, start4word, skip4word)
+        nwords, words = nwords_counter(training_set, n, splitter, end_chr, start4word, skip4word,
+                                       start_chr=start_chr)
         self.nwords = expand_2d(nwords)
         self.__n = n
         self.words = words
         self.end_chr = end_chr
         self.min_len = 4
+        self.default_start = tuple([start_chr for _ in range(n - 1)])
+        self.start_chr = start_chr
         print("Preparing Done", file=sys.stderr)
         pass
 
-    def _get_prefix(self, pwd: Union[List, Tuple]):
+    def _get_prefix(self, pwd: Union[List, Tuple], transition: str):
         if len(pwd) < self.__n:
             return tuple(pwd)
         else:
@@ -38,14 +42,18 @@ class NWordsMonteCarlo(MonteCarlo):
         for index in range(1, len(pwd) + 1):
             left = pwd[0:index]
             if left in self.words:
-                prev = self._get_prefix(container)
+                prev = self._get_prefix(container, left)
                 if prev in self.nwords and left in self.nwords.get(prev)[0]:
+                    lp = -log2(self.nwords.get(prev)[0].get(left))
+                    print(f"{prev}{left}, {self.nwords.get(prev)[0].get(left)}, {lp}")
                     container.append(left)
                     probabilities.append(self.nwords.get(prev)[0].get(left))
                 else:
                     continue
-                if len("".join(container)) == target_len:
-                    possible = [(c, p) for c, p in zip(copy.deepcopy(container), copy.deepcopy(probabilities))]
+                if len("".join([c for c in container if c != self.start_chr])) == target_len:
+                    possible = [(c, p) for c, p in
+                                zip(copy.deepcopy([c for c in container if c != self.start_chr]),
+                                    copy.deepcopy(probabilities))]
                     possible_list.append(possible)
                 self.__structures(pwd[index:], possible_list, container, probabilities, target_len)
                 container.pop()
@@ -53,10 +61,14 @@ class NWordsMonteCarlo(MonteCarlo):
 
     def calc_ml2p(self, pwd: str) -> float:
         possible_list = []
-        self.__structures(pwd + self.end_chr, possible_list, [], [], len(pwd) + len(self.end_chr))
+        self.__structures(pwd + self.end_chr, possible_list, list(self.default_start), [], len(pwd) + len(self.end_chr))
         probabilities = []
         for possible in possible_list:
-            prob = sum([self.minus_log2(p) for _, p in possible])
+            lps = [self.minus_log2(p) for _, p in possible]
+            prob = sum(lps)
+            print(lps)
+            print(possible)
+            print(prob)
             probabilities.append(prob)
         if len(probabilities) == 0:
             return self.minus_log2(sys.float_info.min)
@@ -65,18 +77,18 @@ class NWordsMonteCarlo(MonteCarlo):
             return min_prob
 
     def sample1(self) -> (float, str):
-        pwd = tuple()
+        pwd = self.default_start
         prob = .0
         pwd_len = 0
         while True:
-            tar = self._get_prefix(pwd)
+            tar = self._get_prefix(pwd, "")
             p, addon = pick_expand(self.nwords.get(tar))
             prob += self.minus_log2(p)
             if addon == self.end_chr:
                 if pwd_len >= self.min_len:
                     break
                 else:
-                    pwd = tuple()
+                    pwd = self.default_start
                     prob = .0
                     pwd_len = 0
                     continue
@@ -85,7 +97,7 @@ class NWordsMonteCarlo(MonteCarlo):
             pwd = tuple(_tmp)
             pwd_len += len(addon)
             if pwd_len >= 256:
-                pwd = tuple()
+                pwd = self.default_start
                 prob = .0
                 pwd_len = 0
         return prob, "".join(pwd)

@@ -44,8 +44,6 @@ class NWordsMonteCarlo(MonteCarlo):
             if left in self.words:
                 prev = self._get_prefix(container, left)
                 if prev in self.nwords and left in self.nwords.get(prev)[0]:
-                    lp = -log2(self.nwords.get(prev)[0].get(left))
-                    print(f"{prev}{left}, {self.nwords.get(prev)[0].get(left)}, {lp}")
                     container.append(left)
                     probabilities.append(self.nwords.get(prev)[0].get(left))
                 else:
@@ -66,9 +64,6 @@ class NWordsMonteCarlo(MonteCarlo):
         for possible in possible_list:
             lps = [self.minus_log2(p) for _, p in possible]
             prob = sum(lps)
-            print(lps)
-            print(possible)
-            print(prob)
             probabilities.append(prob)
         if len(probabilities) == 0:
             return self.minus_log2(sys.float_info.min)

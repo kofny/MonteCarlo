@@ -47,7 +47,7 @@ def backwords_counter(nwords_list: TextIO, splitter: str, start_chr: str, end_ch
     for n in tqdm(range(min_gram, max_gram + 1), desc="Counting: "):
         nwords_dict: Dict[Tuple, Dict[str, int]] = defaultdict(lambda: defaultdict(int))
         for sec_len, sections_cnt in section_dict.items():
-            if n >= sec_len:
+            if n > sec_len:
                 continue
             for sections, cnt in sections_cnt.items():
                 prefix_words_num = n - 1

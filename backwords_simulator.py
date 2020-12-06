@@ -38,10 +38,6 @@ def wrapper():
     cli.add_argument("-t", "--test", dest="test", type=argparse.FileType('r'), required=True, help="testing file")
     cli.add_argument("-s", "--save", dest="save", type=argparse.FileType('w'), required=True,
                      help="save Monte Carlo results here")
-    cli.add_argument("--min-gram", dest="min_gram", type=int, required=False, default=2, choices=[2, 3, 4, 5, 6],
-                     help="min gram for backoff words")
-    cli.add_argument("--max-gram", dest="max_gram", type=int, required=False, default=4, choices=[2, 3, 4, 5, 6],
-                     help="min gram for backoff words")
     cli.add_argument("--size", dest="size", type=int, required=False, default=100000, help="sample size")
     cli.add_argument("--splitter", dest="splitter", type=lambda x: str(x).replace("\\\\", "\\"), required=False,
                      default="\t", help="how to divide different columns from the input file")

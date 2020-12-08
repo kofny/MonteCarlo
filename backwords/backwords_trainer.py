@@ -20,7 +20,7 @@ def parse_line(line: str, splitter: str, start4words: int, skip4words: int):
 
 
 def backwords_counter(nwords_list: TextIO, splitter: str, start_chr: str, end_chr: str,
-                      start4words: int, skip4words: int, threshold: int):
+                      start4words: int, skip4words: int, threshold: int, max_gram: int):
     nwords_dict: Dict[Tuple, Dict[str, int]] = defaultdict(lambda: defaultdict(int))
     zero = tuple()
     nwords_float_dict = {zero: {}}
@@ -43,7 +43,7 @@ def backwords_counter(nwords_list: TextIO, splitter: str, start_chr: str, end_ch
     for trans, p in nwords_dict[zero].items():
         nwords_float_dict[zero][trans] = p / zero_sum
     min_gram = 2
-    max_gram = max([_l for _l, s in section_dict.items() if sum(s.values()) >= threshold])
+    max_gram = min(max([_l for _l, s in section_dict.items() if sum(s.values()) >= threshold]), max(2, max_gram))
     for n in tqdm(range(min_gram, max_gram + 1), desc="Counting: "):
         nwords_dict: Dict[Tuple, Dict[str, int]] = defaultdict(lambda: defaultdict(int))
         for sec_len, sections_cnt in section_dict.items():

@@ -22,7 +22,7 @@ def parse_line(line: str, splitter: str, start4words: int, skip4words: int):
 def nwords_counter(nwords_list: TextIO, n: int, splitter: str, end_chr: str, start4words: int,
                    skip4words: int, start_chr: str = '\x00'):
     nwords_dict: Dict[Tuple, Dict[str, int]] = defaultdict(lambda: defaultdict(int))
-    prefix_words = n - 1
+    prefix_words_num = n - 1
     line_num = wc_l(nwords_list)
     section_dict = defaultdict(int)
     words: Dict[str, int] = defaultdict(int)
@@ -36,10 +36,9 @@ def nwords_counter(nwords_list: TextIO, n: int, splitter: str, end_chr: str, sta
         section_dict[tuple(sections)] += 1
     nwords_list.close()
     for sections, cnt in tqdm(section_dict.items(), desc="Counting: "):
-        prefix_words_num = n - 1
         for i in range(len(sections) - prefix_words_num):
             grams = tuple(sections[i:i + prefix_words_num])
-            transition = sections[i + n]
+            transition = sections[i + prefix_words_num]
             nwords_dict[grams][transition] += cnt
     del section_dict
     nwords_float_dict: Dict[Tuple, Dict[str, float]] = {}

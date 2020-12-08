@@ -50,7 +50,7 @@ class MonteCarlo(metaclass=abc.ABCMeta):
             line = line.strip("\r\n")
             pwd_counter[line] += 1
         res: List[Tuple[str, int, float]] = []
-        for pwd, num in tqdm(pwd_counter.items(), desc="Parsing test: "):
+        for pwd, num in tqdm(pwd_counter.items(), desc="Scoring: "):
             _mlp = self.calc_ml2p(pwd)
             res.append((pwd, num, _mlp))
         res = sorted(res, key=lambda x: x[2])

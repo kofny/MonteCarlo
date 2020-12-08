@@ -4,7 +4,6 @@ Simulator for N Words
 import argparse
 import copy
 import sys
-from math import log2
 from typing import TextIO, List, Union, Tuple
 
 from lib4mc.MonteCarloLib import MonteCarloLib
@@ -28,7 +27,6 @@ class NWordsMonteCarlo(MonteCarlo):
         self.min_len = 4
         self.default_start = tuple([start_chr for _ in range(n - 1)])
         self.start_chr = start_chr
-        print("Preparing Done", file=sys.stderr)
         pass
 
     def _get_prefix(self, pwd: Union[List, Tuple], transition: str):

@@ -105,12 +105,17 @@ def wrapper():
     cli.add_argument("-n", "--ngram", dest="ngram", type=int, required=False, default=2, choices=[2, 3, 4, 5, 6],
                      help="ngram")
     cli.add_argument("--size", dest="size", type=int, required=False, default=100000, help="sample size")
-    cli.add_argument("--splitter", dest="splitter", type=str, required=False, default="\t",
-                     help="splitter, set empty if splitting the password char by char")
+    cli.add_argument("--splitter", dest="splitter", type=lambda x: str(x).replace("\\\\", "\\"), required=False,
+                     default="\t",
+                     help="how to divide different columns from the input file. "
+                          "Set it \"empty\" to represent \'\'")
     cli.add_argument("--start4word", dest="start4word", type=int, required=False, default=0,
-                     help="start index for words")
+                     help="start index for words, to fit as much as formats of input. An entry per line. "
+                          "We get an array of words by splitting the entry. "
+                          "\"start4word\" is the index of the first word in the array")
     cli.add_argument("--skip4word", dest="skip4word", type=int, required=False, default=1,
-                     help="step between two words")
+                     help="there may be other elements between words, such as tags. "
+                          "Set skip4word larger than 1 to skip unwanted elements.")
     args = cli.parse_args()
     if args.splitter == 'empty':
         args.splitter = ''

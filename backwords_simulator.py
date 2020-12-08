@@ -40,7 +40,8 @@ def wrapper():
                      help="save Monte Carlo results here")
     cli.add_argument("--size", dest="size", type=int, required=False, default=100000, help="sample size")
     cli.add_argument("--splitter", dest="splitter", type=lambda x: str(x).replace("\\\\", "\\"), required=False,
-                     default="\t", help="how to divide different columns from the input file")
+                     default="\t",
+                     help="how to divide different columns from the input file, set it \"empty\" to represent \'\'")
     cli.add_argument("--start4word", dest="start4word", type=int, required=False, default=0,
                      help="start index for words, to fit as much as formats of input. An entry per line. "
                           "We get an array of words by splitting the entry. "
@@ -53,7 +54,7 @@ def wrapper():
     cli.add_argument("--debug-mode", dest="debug_mode", required=False, action="store_true",
                      help="enter passwords and show probability of the password")
     args = cli.parse_args()
-    if args.splitter == 'empty':
+    if args.splitter.lower() == 'empty':
         args.splitter = ''
     backword_mc = BackWordsMonteCarlo(args.input, splitter=args.splitter, start4word=args.start4word,
                                       skip4word=args.skip4word,

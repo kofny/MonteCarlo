@@ -26,7 +26,7 @@ def nwords_counter(nwords_list: TextIO, n: int, splitter: str, end_chr: str, sta
     line_num = wc_l(nwords_list)
     section_dict = defaultdict(int)
     words: Dict[str, int] = defaultdict(int)
-    for line in tqdm(nwords_list, total=line_num, desc="Parsing: "):  # type: str
+    for line in tqdm(nwords_list, total=line_num, desc="Reading: "):  # type: str
         line = line.strip("\r\n")
         sections = [start_chr]
         sections.extend(parse_line(line, splitter, start4words, skip4words))

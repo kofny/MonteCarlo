@@ -29,8 +29,7 @@ def backwords_counter(nwords_list: TextIO, splitter: str, start_chr: str, end_ch
     section_dict = defaultdict(lambda: defaultdict(int))
     for line in tqdm(nwords_list, total=line_num, desc="Reading: "):  # type: str
         line = line.strip("\r\n")
-        sections = [start_chr]
-        sections.extend(parse_line(line, splitter, start4words, skip4words))
+        sections = parse_line(start_chr + line, splitter, start4words, skip4words)
         sections.append(end_chr)
         for sec in sections:
             words[sec] += 1

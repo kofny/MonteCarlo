@@ -1,4 +1,5 @@
 import argparse
+import sys
 from typing import TextIO, Union, List, Tuple
 
 from backwords.backwords_trainer import backwords_counter
@@ -22,13 +23,17 @@ class BackWordsMonteCarlo(NWordsMonteCarlo):
 
     def _get_prefix(self, pwd: Union[List, Tuple], transition: str):
         tar = (self.default_start,)
+        found = False
         for i in range(0, len(pwd)):
             tmp_tar = tuple(pwd[i:])
             if tmp_tar not in self.nwords or \
                     (transition != "" and transition not in self.nwords.get(tmp_tar)[0]):
                 continue
             tar = tmp_tar
+            found = True
             break
+        if not found:
+            tar = tuple()
         return tar
 
 
@@ -53,12 +58,13 @@ def wrapper():
                      help="grams whose frequencies less than the threshold will be ignored")
     cli.add_argument("--debug-mode", dest="debug_mode", required=False, action="store_true",
                      help="enter passwords and show probability of the password")
+    cli.add_argument("--max-gram", dest="max_gram", required=False, type=int, default=256, help="max gram")
     args = cli.parse_args()
     if args.splitter.lower() == 'empty':
         args.splitter = ''
     backword_mc = BackWordsMonteCarlo(args.input, splitter=args.splitter, start4word=args.start4word,
                                       skip4word=args.skip4word,
-                                      threshold=args.threshold)
+                                      threshold=args.threshold, max_gram=args.max_gram)
     if args.debug_mode:
         usr_i = ""
         while usr_i != "exit":
@@ -74,4 +80,8 @@ def wrapper():
 
 
 if __name__ == '__main__':
-    wrapper()
+    try:
+        wrapper()
+    except KeyboardInterrupt:
+        print("You canceled the process", file=sys.stderr)
+        sys.exit(-1)

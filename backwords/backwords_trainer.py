@@ -2,6 +2,7 @@
 Backoff words
 """
 import re
+import sys
 from collections import defaultdict
 from typing import TextIO, Dict, Tuple
 
@@ -29,7 +30,8 @@ def backwords_counter(nwords_list: TextIO, splitter: str, start_chr: str, end_ch
     section_dict = defaultdict(lambda: defaultdict(int))
     for line in tqdm(nwords_list, total=line_num, desc="Reading: "):  # type: str
         line = line.strip("\r\n")
-        sections = parse_line(start_chr + line, splitter, start4words, skip4words)
+        sections = [start_chr]
+        sections.extend(parse_line(line, splitter, start4words, skip4words))
         sections.append(end_chr)
         for sec in sections:
             words[sec] += 1
@@ -42,7 +44,11 @@ def backwords_counter(nwords_list: TextIO, splitter: str, start_chr: str, end_ch
     for trans, p in nwords_dict[zero].items():
         nwords_float_dict[zero][trans] = p / zero_sum
     min_gram = 2
-    max_gram = min(max([_l for _l, s in section_dict.items() if sum(s.values()) >= threshold]), max(2, max_gram))
+    len_list = [_l for _l, s in section_dict.items() if sum(s.values()) >= threshold]
+    max_gram = min(max(len_list), max(2, max_gram))
+    if max_gram == 1:
+        print(f"max gram is {max_gram}, fail to model the password dataset", file=sys.stderr)
+        sys.exit(-1)
     for n in tqdm(range(min_gram, max_gram + 1), desc="Counting: "):
         nwords_dict: Dict[Tuple, Dict[str, int]] = defaultdict(lambda: defaultdict(int))
         for sec_len, sections_cnt in section_dict.items():

@@ -2,8 +2,6 @@
 Simulator for N Words
 """
 import argparse
-import copy
-import sys
 from typing import TextIO, List, Union, Tuple
 
 from lib4mc.MonteCarloLib import MonteCarloLib
@@ -35,7 +33,7 @@ class NWordsMonteCarlo(MonteCarlo):
         else:
             return tuple(pwd[1 - self.__n:])
 
-    def __structures(self, pwd, possible_list: List[List], container: List, probabilities: List, target_len: int):
+    def __structures(self, pwd, possible_list: List[float], container: List, probabilities: List, target_len: int):
 
         for index in range(1, len(pwd) + 1):
             left = pwd[0:index]
@@ -47,27 +45,18 @@ class NWordsMonteCarlo(MonteCarlo):
                 else:
                     continue
                 if len("".join([c for c in container if c != self.start_chr])) == target_len:
-                    possible = [(c, p) for c, p in
-                                zip(copy.deepcopy([c for c in container if c != self.start_chr]),
-                                    copy.deepcopy(probabilities))]
-                    possible_list.append(possible)
+                    minus_log2_prob = sum([self.minus_log2(p) for p in probabilities])
+                    if possible_list[0] > minus_log2_prob:
+                        possible_list[0] = minus_log2_prob
                 self.__structures(pwd[index:], possible_list, container, probabilities, target_len)
                 container.pop()
                 probabilities.pop()
 
     def calc_ml2p(self, pwd: str) -> float:
-        possible_list = []
-        self.__structures(pwd + self.end_chr, possible_list, list(self.default_start), [], len(pwd) + len(self.end_chr))
-        probabilities = []
-        for possible in possible_list:
-            lps = [self.minus_log2(p) for _, p in possible]
-            prob = sum(lps)
-            probabilities.append(prob)
-        if len(probabilities) == 0:
-            return self.minus_log2(sys.float_info.min)
-        else:
-            min_prob = min(probabilities)
-            return min_prob
+        possible_list = [float(1022)]
+        self.__structures(pwd + self.end_chr, possible_list, list(self.default_start),
+                          [], len(pwd) + len(self.end_chr))
+        return possible_list[0]
 
     def sample1(self) -> (float, str):
         pwd = self.default_start

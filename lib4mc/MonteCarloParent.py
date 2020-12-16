@@ -1,5 +1,4 @@
 import abc
-import sys
 from collections import defaultdict
 from math import log2
 from typing import List, TextIO, Tuple
@@ -46,7 +45,7 @@ class MonteCarlo(metaclass=abc.ABCMeta):
         """
         line_num = wc_l(testing_set)
         pwd_counter = defaultdict(int)
-        for line in tqdm(testing_set, desc="Counting: ", total=line_num):
+        for line in tqdm(testing_set, desc="Reading: ", total=line_num):
             line = line.strip("\r\n")
             pwd_counter[line] += 1
         res: List[Tuple[str, int, float]] = []

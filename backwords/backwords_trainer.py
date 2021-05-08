@@ -11,17 +11,17 @@ from tqdm import tqdm
 from lib4mc.FileLib import wc_l
 
 
-def parse_line(line: str, splitter: str, start4words: int, skip4words: int):
+def parse_line(line: str, splitter: str, start4words: int, step4words: int):
     line = line.strip("\r\n")
     if splitter == '':
         return list(line)
     items = re.split(splitter, line)
-    words = items[start4words:len(items):skip4words]
+    words = items[start4words:len(items):step4words]
     return words
 
 
 def backwords_counter(nwords_list: TextIO, splitter: str, start_chr: str, end_chr: str,
-                      start4words: int, skip4words: int, threshold: int, max_gram: int):
+                      start4words: int, step4words: int, threshold: int, max_gram: int):
     nwords_dict: Dict[Tuple, Dict[str, int]] = defaultdict(lambda: defaultdict(int))
     zero = tuple()
     nwords_float_dict = {zero: {}}
@@ -31,7 +31,7 @@ def backwords_counter(nwords_list: TextIO, splitter: str, start_chr: str, end_ch
     for line in tqdm(nwords_list, total=line_num, desc="Reading: "):  # type: str
         line = line.strip("\r\n")
         sections = [start_chr]
-        sections.extend(parse_line(line, splitter, start4words, skip4words))
+        sections.extend(parse_line(line, splitter, start4words, step4words))
         sections.append(end_chr)
         for sec in sections:
             words[sec] += 1

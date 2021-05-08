@@ -15,7 +15,7 @@ def wrapper():
     cli.add_argument("-s", '--save', dest="f_save", required=True, type=argparse.FileType('w'),
                      help="save password candidates here")
     args = cli.parse_args()
-    backwords_dict_float, _ = backwords_counter(args.pwd_file, '', '\x00', '\x03', 0, 1, 10, 3)
+    backwords_dict_float, _ = backwords_counter(args.pwd_file, '', '\x00', '\x03', 0, 1, 10, 256)
     enumerator(backwords_dict_float, args.min_prob, '\x00', '\x03', args.min_len, args.f_save)
     pass
 

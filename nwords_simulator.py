@@ -2,6 +2,7 @@
 Simulator for N Words
 """
 import argparse
+import re
 from typing import TextIO, List, Union, Tuple
 
 from lib4mc.MonteCarloLib import MonteCarloLib
@@ -52,8 +53,33 @@ class NWordsMonteCarlo(MonteCarlo):
                 container.pop()
                 probabilities.pop()
 
+    def __for_all_same(self, pwd: str, probabilities: List[float]):
+        """
+        Specifically for passwords like `11111111...`, `2222222...``, etc.
+        :param pwd:  given password
+        :return: the probability of the given password
+        """
+        container = list(self.default_start)
+        prob = .0
+        for index in range(0, len(pwd)):
+            left = pwd[index: index + 1]
+            if left in self.words:
+                prev = self._get_prefix(container, left)
+                if prev in self.nwords and left in self.nwords.get(prev)[0]:
+                    container.append(left)
+                    prob += self.minus_log2(self.nwords.get(prev)[0].get(left))
+                else:
+                    return
+            else:
+                return
+        probabilities[0] = min(prob, probabilities[0])
+        pass
+
     def calc_ml2p(self, pwd: str) -> float:
         possible_list = [float(1022)]
+        if re.fullmatch(r"(.)\1+", pwd):
+            self.__for_all_same(pwd + self.end_chr, possible_list)
+            return possible_list[0]
         self.__structures(pwd + self.end_chr, possible_list, list(self.default_start),
                           [], len(pwd) + len(self.end_chr))
         return possible_list[0]

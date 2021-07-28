@@ -10,7 +10,8 @@ from nwords_simulator import NWordsMonteCarlo
 
 class BackWordsMonteCarlo(NWordsMonteCarlo):
     def __init__(self, training_set: TextIO, splitter: str, start4word: int, skip4word: int,
-                 threshold: int, start_chr: str = '\x00', end_chr: str = "\x03", max_gram: int = 256):
+                 threshold: int, start_chr: str = '\x00', end_chr: str = "\x03", max_gram: int = 256,
+                 max_iter: int = 10 ** 100):
         super().__init__(None)
         backwords, words = backwords_counter(training_set, splitter, start_chr, end_chr, start4word, skip4word,
                                              threshold=threshold, max_gram=max_gram)
@@ -20,6 +21,7 @@ class BackWordsMonteCarlo(NWordsMonteCarlo):
         self.min_len = 4
         self.default_start = start_chr
         self.start_chr = start_chr
+        self.max_iter = max_iter
 
     def _get_prefix(self, pwd: Union[List, Tuple], transition: str):
         tar = (self.default_start,)
@@ -35,6 +37,13 @@ class BackWordsMonteCarlo(NWordsMonteCarlo):
         if not found:
             tar = tuple()
         return tar
+
+    def calc_ml2p(self, pwd: str) -> float:
+        possible_list = [float(1022)]
+        print(self.max_iter)
+        self._structures(pwd + self.end_chr, possible_list, list(self.default_start),
+                         [], len(pwd) + len(self.end_chr), self.max_iter, [0])
+        return possible_list[0]
 
 
 def wrapper():
@@ -58,12 +67,14 @@ def wrapper():
     cli.add_argument("--debug-mode", dest="debug_mode", required=False, action="store_true",
                      help="enter passwords and show probability of the password")
     cli.add_argument("--max-gram", dest="max_gram", required=False, type=int, default=256, help="max gram")
+    cli.add_argument("--max-iter", dest="max_iter", required=False, default=10 ** 20, type=int,
+                     help="max iteration when calculating the maximum probability of a password")
     args = cli.parse_args()
     if args.splitter.lower() == 'empty':
         args.splitter = ''
     backword_mc = BackWordsMonteCarlo(args.input, splitter=args.splitter, start4word=args.start4word,
                                       skip4word=args.skip4word,
-                                      threshold=args.threshold, max_gram=args.max_gram)
+                                      threshold=args.threshold, max_gram=args.max_gram, max_iter=args.max_iter)
     if args.debug_mode:
         usr_i = ""
         while usr_i != "exit":

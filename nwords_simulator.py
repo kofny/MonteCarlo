@@ -2,7 +2,6 @@
 Simulator for N Words
 """
 import argparse
-import re
 from typing import TextIO, List, Union, Tuple
 
 from lib4mc.MonteCarloLib import MonteCarloLib
@@ -34,8 +33,10 @@ class NWordsMonteCarlo(MonteCarlo):
         else:
             return tuple(pwd[1 - self.__n:])
 
-    def __structures(self, pwd, possible_list: List[float], container: List, probabilities: List, target_len: int):
-
+    def _structures(self, pwd, possible_list: List[float], container: List, probabilities: List, target_len: int,
+                    iter_max: int, cur_iter: List[int]):
+        if cur_iter[0] >= iter_max:
+            return
         for index in range(1, len(pwd) + 1):
             left = pwd[0:index]
             if left in self.words:
@@ -49,7 +50,8 @@ class NWordsMonteCarlo(MonteCarlo):
                     minus_log2_prob = sum([self.minus_log2(p) for p in probabilities])
                     if possible_list[0] > minus_log2_prob:
                         possible_list[0] = minus_log2_prob
-                self.__structures(pwd[index:], possible_list, container, probabilities, target_len)
+                    cur_iter[0] += 1
+                self._structures(pwd[index:], possible_list, container, probabilities, target_len, iter_max, cur_iter)
                 container.pop()
                 probabilities.pop()
 
@@ -77,11 +79,8 @@ class NWordsMonteCarlo(MonteCarlo):
 
     def calc_ml2p(self, pwd: str) -> float:
         possible_list = [float(1022)]
-        if re.fullmatch(r"(.)\1+", pwd):
-            self.__for_all_same(pwd + self.end_chr, possible_list)
-            return possible_list[0]
-        self.__structures(pwd + self.end_chr, possible_list, list(self.default_start),
-                          [], len(pwd) + len(self.end_chr))
+        self._structures(pwd + self.end_chr, possible_list, list(self.default_start),
+                         [], len(pwd) + len(self.end_chr), 100000000000000000000000000000000000, [0])
         return possible_list[0]
 
     def sample1(self) -> (float, str):

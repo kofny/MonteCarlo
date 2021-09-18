@@ -26,10 +26,12 @@ def nwords_counter(nwords_list: TextIO, n: int, splitter: str, end_chr: str, sta
     line_num = wc_l(nwords_list)
     section_dict = defaultdict(int)
     words: Dict[str, int] = defaultdict(int)
-    default_start = start_chr * (n - 1)
+    # default_start = start_chr * (n - 1)
     for line in tqdm(nwords_list, total=line_num, desc="Reading: "):  # type: str
         line = line.strip("\r\n")
-        sections = parse_line(default_start + line, splitter, start4words, skip4words)
+        sections = [start_chr for _ in range(n - 1)]
+        extends = parse_line(line, splitter, start4words, skip4words)
+        sections.extend(extends)
         sections.append(end_chr)
         for sec in sections:
             words[sec] += 1

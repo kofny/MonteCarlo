@@ -23,11 +23,8 @@ def parse_line(line: str, splitter: str, start4words: int, step4words: int):
 
 
 def backwords_counter(nwords_list: TextIO, splitter: str, start_chr: str, end_chr: str,
-                      start4words: int, step4words: int, max_gram: int, save: BinaryIO,
+                      start4words: int, step4words: int, max_gram: int,
                       nwords_dict: Dict[Tuple, Dict[str, int]] = None):
-    if not save.writable():
-        print(f"{save.name} is not writable", file=sys.stderr)
-        sys.exit(1)
     if nwords_dict is None:
         nwords_dict: Dict[Tuple, Dict[str, int]] = {}
     zero = tuple()
@@ -72,10 +69,6 @@ def backwords_counter(nwords_list: TextIO, splitter: str, start_chr: str, end_ch
                 pass
             pass
         pass
-    pickle.dump((nwords_dict,
-                 words,
-                 {'start_chr': start_chr, 'end_chr': end_chr, 'max_gram': max_gram}
-                 ), file=save)
     return nwords_dict, words
 
 

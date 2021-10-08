@@ -21,13 +21,13 @@ def parse_line(line: str, splitter: str, start4words: int, step4words: int):
 
 def backwords_counter(nwords_list: TextIO, splitter: str, start_chr: str, end_chr: str,
                       start4words: int, step4words: int, max_gram: int,
-                      nwords_dict: Dict[Tuple, Dict[str, int]] = None):
+                      nwords_dict: Dict[Tuple, Dict[str, int]] = None, words: Dict[str, int] = None):
     if nwords_dict is None:
         nwords_dict: Dict[Tuple, Dict[str, int]] = {}
+        words: Dict[str, int] = {}
     zero = tuple()
     # nwords_float_dict = {zero: {}}
     line_num = wc_l(nwords_list)
-    words: Dict[str, int] = {}
     section_dict = defaultdict(lambda: defaultdict(int))
     for line in tqdm(nwords_list, total=line_num, desc="Reading: "):  # type: str
         line = line.strip("\r\n")

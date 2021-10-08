@@ -42,7 +42,6 @@ class BackWordsMonteCarlo(NWordsMonteCarlo):
 
     def calc_ml2p(self, pwd: str) -> float:
         possible_list = [float(1022)]
-        print(self.max_iter)
         self._structures(pwd + self.end_chr, possible_list, list(self.default_start),
                          [], len(pwd) + len(self.end_chr), self.max_iter, [0])
         return possible_list[0]
@@ -55,8 +54,9 @@ def wrapper():
     cli.add_argument("-s", "--save", dest="save", type=argparse.FileType('w'), required=True,
                      help="save Monte Carlo results here")
     cli.add_argument("--size", dest="size", type=int, required=False, default=100000, help="sample size")
-    cli.add_argument("--splitter", dest="splitter", type=str, required=False, default="\t",
-                     help="how to divide different columns from the input file, set it \"empty\" to represent \'\'")
+    cli.add_argument("--splitter", dest="splitter", type=str, required=False, default="empty",
+                     help="how to divide different columns from the input file, "
+                          "set it \"empty\" to represent \'\', \"space\" for \' \', \"tab\" for \'\t\'")
     cli.add_argument("--start4word", dest="start4word", type=int, required=False, default=0,
                      help="start index for words, to fit as much as formats of input. An entry per line. "
                           "We get an array of words by splitting the entry. "
@@ -72,8 +72,9 @@ def wrapper():
     cli.add_argument("--max-iter", dest="max_iter", required=False, default=10 ** 20, type=int,
                      help="max iteration when calculating the maximum probability of a password")
     args = cli.parse_args()
-    if args.splitter.lower() == 'empty':
-        args.splitter = ''
+    splitter_map = {'empty': '', 'space': ' ', 'tab': '\t'}
+    if args.splitter.lower() in splitter_map:
+        args.splitter = splitter_map[args.splitter.lower()]
     backword_mc = BackWordsMonteCarlo(args.input, splitter=args.splitter, start4word=args.start4word,
                                       skip4word=args.skip4word,
                                       threshold=args.threshold, max_gram=args.max_gram, max_iter=args.max_iter)

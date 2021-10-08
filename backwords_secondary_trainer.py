@@ -1,5 +1,6 @@
 import argparse
 import pickle
+import sys
 
 from backwords.backwords_secondary_trainer import backwords_counter
 
@@ -26,18 +27,20 @@ def wrapper():
                      help="grams whose frequencies less than the threshold will be ignored")
     cli.add_argument("--max-gram", dest="max_gram", required=False, type=int, default=256, help="max gram")
     args = cli.parse_args()
-    nwords_dict = None
+    base_nwords_dict, words = None, None
     splitter_map = {'empty': '', 'space': ' ', 'tab': '\t'}
     if args.splitter.lower() in splitter_map:
         args.splitter = splitter_map[args.splitter.lower()]
     start_chr, end_chr = '\x03', '\x00'
     if args.model is not None:
+        print(f"Secondary training based on: {args.model}", file=sys.stderr)
         with open(args.model, 'rb') as f_model:
-            nwords_dict, _, config = pickle.load(f_model)
+            base_nwords_dict, words, config = pickle.load(f_model)
         start_chr, end_chr = config['start_chr'], config['end_chr']
     nwords_dict, words = backwords_counter(
         nwords_list=args.training, splitter=args.splitter, start_chr=start_chr, end_chr=end_chr,
-        start4words=args.start4words, step4words=args.skip4words, max_gram=args.max_gram, nwords_dict=nwords_dict)
+        start4words=args.start4words, step4words=args.skip4words, max_gram=args.max_gram,
+        nwords_dict=base_nwords_dict, words=words)
     with open(args.save, 'wb') as f_save:
         pickle.dump(
             (

@@ -1,12 +1,9 @@
 """
 Backoff words
 """
-import argparse
-import pickle
 import re
-import sys
 from collections import defaultdict
-from typing import TextIO, Dict, Tuple, BinaryIO
+from typing import TextIO, Dict, Tuple
 
 from tqdm import tqdm
 

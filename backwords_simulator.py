@@ -9,10 +9,12 @@ from nwords_simulator import NWordsMonteCarlo
 
 
 class BackWordsMonteCarlo(NWordsMonteCarlo):
-    def __init__(self, training_set: TextIO, splitter: str, start4word: int, skip4word: int,
-                 threshold: int, start_chr: str = '\x00', end_chr: str = "\x03", max_gram: int = 256,
+    def __init__(self, training_set: Union[TextIO, None], splitter: str = '', start4word: int = 0, skip4word: int = 1,
+                 threshold: int = 10, start_chr: str = '\x00', end_chr: str = "\x03", max_gram: int = 256,
                  max_iter: int = 10 ** 100):
         super().__init__(None)
+        if training_set is None:
+            return
         backwords, words = backwords_counter(training_set, splitter, start_chr, end_chr, start4word, skip4word,
                                              threshold=threshold, max_gram=max_gram)
         self.nwords = expand_2d(backwords)

@@ -1,0 +1,84 @@
+"""
+Backoff words
+"""
+import argparse
+import pickle
+import re
+import sys
+from collections import defaultdict
+from typing import TextIO, Dict, Tuple, BinaryIO
+
+from tqdm import tqdm
+
+from lib4mc.FileLib import wc_l
+
+
+def parse_line(line: str, splitter: str, start4words: int, step4words: int):
+    line = line.strip("\r\n")
+    if splitter == '':
+        return list(line)
+    items = re.split(splitter, line)
+    words = items[start4words:len(items):step4words]
+    return words
+
+
+def backwords_counter(nwords_list: TextIO, splitter: str, start_chr: str, end_chr: str,
+                      start4words: int, step4words: int, max_gram: int, save: BinaryIO,
+                      nwords_dict: Dict[Tuple, Dict[str, int]] = None):
+    if not save.writable():
+        print(f"{save.name} is not writable", file=sys.stderr)
+        sys.exit(1)
+    if nwords_dict is None:
+        nwords_dict: Dict[Tuple, Dict[str, int]] = {}
+    zero = tuple()
+    # nwords_float_dict = {zero: {}}
+    line_num = wc_l(nwords_list)
+    words: Dict[str, int] = {}
+    section_dict = defaultdict(lambda: defaultdict(int))
+    for line in tqdm(nwords_list, total=line_num, desc="Reading: "):  # type: str
+        line = line.strip("\r\n")
+        sections = [start_chr]
+        sections.extend(parse_line(line, splitter, start4words, step4words))
+        sections.append(end_chr)
+        for sec in sections:
+            if sec not in words:
+                words[sec] = 0
+            words[sec] += 1
+            if sec not in {start_chr}:
+                if zero not in nwords_dict:
+                    nwords_dict[zero] = {}
+                if sec not in nwords_dict[zero]:
+                    nwords_dict[zero][sec] = 0
+                nwords_dict[zero][sec] += 1
+
+        section_dict[len(sections)][tuple(sections)] += 1
+    pass
+
+    for n in range(2, max_gram + 1):
+        for sec_len, sec_len_dict in section_dict.items():
+            if sec_len < n:
+                continue
+            order = n - 1
+            for sec, num in sec_len_dict.items():
+                for i in range(0, len(sec) - order):
+                    prefix = sec[i:i + order]
+                    transition = sec[i + order]
+
+                    if prefix not in nwords_dict:
+                        nwords_dict[prefix] = {}
+                    if transition not in nwords_dict[prefix]:
+                        nwords_dict[prefix][transition] = 0
+                    nwords_dict[prefix][transition] += num
+                pass
+            pass
+        pass
+    pickle.dump((nwords_dict,
+                 words,
+                 {'start_chr': start_chr, 'end_chr': end_chr, 'max_gram': max_gram}
+                 ), file=save)
+    return nwords_dict, words
+
+
+def freq2prob(nwords_dict: Dict) -> Dict:
+    return nwords_dict
+    pass

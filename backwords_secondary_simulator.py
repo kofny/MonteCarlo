@@ -1,7 +1,7 @@
 import argparse
 import pickle
 import sys
-from typing import TextIO, Union, List, Tuple, BinaryIO
+from typing import BinaryIO
 
 from backwords.backwords_secondary_trainer import freq2prob
 from backwords_simulator import BackWordsMonteCarlo
@@ -13,7 +13,7 @@ class BackWordsSecondaryMonteCarlo(BackWordsMonteCarlo):
     def __init__(self, model: BinaryIO, max_iter: int = 10 ** 100):
         super().__init__(None)
         backwords, words, config = pickle.load(model)
-        backwords = freq2prob(backwords)
+        backwords = freq2prob(backwords, config['threshold'])
         self.nwords = expand_2d(backwords)
         self.end_chr = config['end_chr']
         self.words = words
@@ -35,8 +35,7 @@ def wrapper():
     cli.add_argument("--max-iter", dest="max_iter", required=False, default=10 ** 20, type=int,
                      help="max iteration when calculating the maximum probability of a password")
     args = cli.parse_args()
-    backword_mc = BackWordsMonteCarlo(args.model,
-                                      threshold=args.threshold, max_iter=args.max_iter)
+    backword_mc = BackWordsSecondaryMonteCarlo(args.model, max_iter=args.max_iter)
     if args.debug_mode:
         usr_i = ""
         while usr_i != "exit":

@@ -69,6 +69,24 @@ def backwords_counter(nwords_list: TextIO, splitter: str, start_chr: str, end_ch
     return nwords_dict, words
 
 
-def freq2prob(nwords_dict: Dict) -> Dict:
-    return nwords_dict
-    pass
+def freq2prob(nwords_dict: Dict, threshold: int) -> Dict:
+    nwords_float_dict: Dict[Tuple, Dict[str, float]] = {}
+    for prefix, trans_cnt in sorted(nwords_dict.items(), key=lambda x: len(x[0])):
+        total = sum(trans_cnt.values())
+        if total < threshold:
+            continue
+        trans_prob = {trans: cnt / total for trans, cnt in trans_cnt.items() if cnt >= threshold}
+        if len(trans_prob) == 0:
+            # all transitions are ignored
+            # because their frequencies are less than the threshold
+            continue
+
+        if len(trans_prob) < len(trans_cnt):
+            # some transitions are ignored
+            missing = 1.0 - sum(trans_prob.values())
+            parent_prefix = prefix[1:]
+            for trans, p in nwords_float_dict[parent_prefix].items():
+                trans_prob[trans] = trans_prob.get(trans, .0) + p * missing
+        nwords_float_dict[prefix] = trans_prob
+
+    return nwords_float_dict

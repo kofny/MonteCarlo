@@ -43,7 +43,7 @@ def wrapper():
             (
                 nwords_dict,
                 words,
-                {'start_chr': start_chr, 'end_chr': end_chr, 'max_gram': args.max_gram}
+                {'start_chr': start_chr, 'end_chr': end_chr, 'max_gram': args.max_gram, 'threshold': args.threshold}
             ), file=f_save)
         pass
     pass

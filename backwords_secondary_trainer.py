@@ -32,21 +32,26 @@ def wrapper():
     if args.splitter.lower() in splitter_map:
         args.splitter = splitter_map[args.splitter.lower()]
     start_chr, end_chr = '\x03', '\x00'
+    training_list = []
     if args.model is not None:
         print(f"Secondary training based on: {args.model}", file=sys.stderr)
         with open(args.model, 'rb') as f_model:
             base_nwords_dict, words, config = pickle.load(f_model)
         start_chr, end_chr = config['start_chr'], config['end_chr']
+        training_list = config['training_list']
+        print(f"Prior training files: {','.join(training_list)}.", file=sys.stderr)
     nwords_dict, words = backwords_counter(
         nwords_list=args.training, splitter=args.splitter, start_chr=start_chr, end_chr=end_chr,
         start4words=args.start4words, step4words=args.skip4words, max_gram=args.max_gram,
         nwords_dict=base_nwords_dict, words=words)
     with open(args.save, 'wb') as f_save:
+        training_list.append(args.training.name)
         pickle.dump(
             (
                 nwords_dict,
                 words,
-                {'start_chr': start_chr, 'end_chr': end_chr, 'max_gram': args.max_gram, 'threshold': args.threshold}
+                {'start_chr': start_chr, 'end_chr': end_chr, 'max_gram': args.max_gram, 'threshold': args.threshold,
+                 'training_list': training_list}
             ), file=f_save)
         pass
     pass

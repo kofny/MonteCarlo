@@ -81,8 +81,9 @@ def freq2prob(nwords_dict: Dict, threshold: int) -> Dict:
             # because their frequencies are less than the threshold
             continue
 
-        if len(trans_prob) < len(trans_cnt):
+        if len(trans_prob) < len(trans_cnt) and len(prefix) > 0:
             # some transitions are ignored
+            # continue when prefix is empty, it occurs when the training file is too small
             missing = 1.0 - sum(trans_prob.values())
             parent_prefix = prefix[1:]
             for trans, p in nwords_float_dict[parent_prefix].items():

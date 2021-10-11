@@ -27,8 +27,8 @@ def backwords_counter(nwords_list: TextIO, splitter: str, start_chr: str, end_ch
         words: Dict[str, int] = {}
     zero = tuple()
     # nwords_float_dict = {zero: {}}
-    if isinstance(nwords_dict, list):
-        line_num = len(nwords_dict)
+    if isinstance(nwords_list, list):
+        line_num = len(nwords_list)
     else:
         line_num = wc_l(nwords_list)
     section_dict = defaultdict(lambda: defaultdict(int))

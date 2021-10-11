@@ -14,25 +14,27 @@ from lib4mc.MonteCarloLib import MonteCarloLib
 
 def secondary_cracker(backwords, words, config, guess_number_threshold, **kwargs):
     save_in_folder = kwargs['save']
+    tag = f"{guess_number_threshold:.0e}"
     nwords_dict, _words = backwords_counter(
         nwords_list=kwargs['training'], splitter=kwargs['splitter'], start_chr=config['start_chr'],
         end_chr=config['end_chr'],
         start4words=kwargs['start4words'], step4words=kwargs['skip4words'], max_gram=kwargs['max_gram'],
         nwords_dict=backwords, words=words)
-    # config['training_list'].append(kwargs['training'].name)
-    # if kwargs['training']
+    fmodel = os.path.join(save_in_folder, f"model-to-crack-{tag}.pickle")
+    with open(fmodel, 'wb') as fd:
+        training = kwargs['training']
+        if isinstance(training, list):
+            config['training_list'].append(tag)
+        else:
+            config['training_list'].append(training.name)
+        pickle.dump((nwords_dict, words, config), file=fd)
     backword_mc = BackWordsSecondaryMonteCarlo((nwords_dict, _words, config), max_iter=kwargs['max_iter'])
     ml2p_list = backword_mc.sample(size=kwargs['size'])
     mc = MonteCarloLib(ml2p_list)
     scored_testing = backword_mc.parse_file(kwargs['testing'])
     gc = mc.ml2p_iter2gc(minus_log_prob_iter=scored_testing)
     secondary_training = []
-    tag = f"{guess_number_threshold:.0e}"
     fcracked = os.path.join(save_in_folder, f"cracked-{tag}.txt")
-    fmodel = os.path.join(save_in_folder, f"model-{tag}.txt")
-    with open(fmodel, 'wb') as fd:
-        pickle.dump((backwords, words, config), file=fd)
-        pass
     with open(fcracked, 'w') as fout:
         for pwd, prob, num, gn, _, _ in gc:
             if gn <= guess_number_threshold:
@@ -94,6 +96,8 @@ def wrapper():
     if not os.path.exists(args.save):
         os.mkdir(args.save)
     for guess_number_threshold in args.guess_number_thresholds:
+        print(f"Training Model, obtaining passwords whose guess numbers are less than {guess_number_threshold:.0e}",
+              file=sys.stderr)
         backwords, words, config, training = secondary_cracker(
             backwords, words, config=config,
             guess_number_threshold=guess_number_threshold,

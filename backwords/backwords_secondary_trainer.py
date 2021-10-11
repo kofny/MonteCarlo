@@ -27,7 +27,10 @@ def backwords_counter(nwords_list: TextIO, splitter: str, start_chr: str, end_ch
         words: Dict[str, int] = {}
     zero = tuple()
     # nwords_float_dict = {zero: {}}
-    line_num = wc_l(nwords_list)
+    if isinstance(nwords_dict, list):
+        line_num = len(nwords_dict)
+    else:
+        line_num = wc_l(nwords_list)
     section_dict = defaultdict(lambda: defaultdict(int))
     for line in tqdm(nwords_list, total=line_num, desc="Reading: "):  # type: str
         line = line.strip("\r\n")

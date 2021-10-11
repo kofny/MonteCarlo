@@ -10,9 +10,12 @@ from lib4mc.ProbLib import expand_2d
 
 
 class BackWordsSecondaryMonteCarlo(BackWordsMonteCarlo):
-    def __init__(self, model: BinaryIO, max_iter: int = 10 ** 100):
+    def __init__(self, model, max_iter: int = 10 ** 100):
         super().__init__(None)
-        backwords, words, config = pickle.load(model)
+        if isinstance(model, tuple):
+            backwords, words, config = model
+        else:
+            backwords, words, config = pickle.load(model)
         backwords = freq2prob(backwords, config['threshold'])
         self.nwords = expand_2d(backwords)
         self.end_chr = config['end_chr']

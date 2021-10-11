@@ -35,9 +35,10 @@ def secondary_cracker(backwords, words, config, guess_number_threshold, **kwargs
     gc = mc.ml2p_iter2gc(minus_log_prob_iter=scored_testing)
     secondary_training = []
     fcracked = os.path.join(save_in_folder, f"cracked-{tag}.txt")
+    already_cracked = kwargs['already_cracked']
     with open(fcracked, 'w') as fout:
         for pwd, prob, num, gn, _, _ in gc:
-            if gn <= guess_number_threshold:
+            if gn <= guess_number_threshold and pwd not in already_cracked:
                 secondary_training.extend([pwd] * num)
                 fout.write(f"{pwd}\t{prob:.8f}\t{num}\t{gn}\n")
         pass
@@ -95,6 +96,7 @@ def wrapper():
     training = args.training
     if not os.path.exists(args.save):
         os.mkdir(args.save)
+    already_cracked = set()
     for guess_number_threshold in args.guess_number_thresholds:
         print(f"Training Model, obtaining passwords whose guess numbers are less than {guess_number_threshold:.0e}",
               file=sys.stderr)
@@ -105,6 +107,7 @@ def wrapper():
             start4words=args.start4words, skip4words=args.skip4words,
             max_gram=args.max_gram, size=args.size, max_iter=args.max_iter,
             testing=args.testing, save=args.save, secondary_sample=args.secondary_sample,
+            already_cracked=already_cracked,
         )
         pass
     pass

@@ -41,6 +41,7 @@ def secondary_cracker(backwords, words, config, guess_number_threshold, **kwargs
             if gn <= guess_number_threshold and pwd not in already_cracked:
                 secondary_training.extend([pwd] * num)
                 fout.write(f"{pwd}\t{prob:.8f}\t{num}\t{gn}\n")
+                already_cracked.add(pwd)
         pass
     secondary_sample_size = kwargs['secondary_sample']
     if secondary_sample_size < len(secondary_training):

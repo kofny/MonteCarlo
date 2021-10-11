@@ -2,6 +2,8 @@
 This file is the portal of secondary training for backwords
 """
 import argparse
+import os.path
+import pickle
 import random
 import sys
 
@@ -11,6 +13,7 @@ from lib4mc.MonteCarloLib import MonteCarloLib
 
 
 def secondary_cracker(backwords, words, config, guess_number_threshold, **kwargs):
+    save_in_folder = kwargs['save']
     nwords_dict, _words = backwords_counter(
         nwords_list=kwargs['training'], splitter=kwargs['splitter'], start_chr=config['start_chr'],
         end_chr=config['end_chr'],
@@ -24,14 +27,28 @@ def secondary_cracker(backwords, words, config, guess_number_threshold, **kwargs
     scored_testing = backword_mc.parse_file(kwargs['testing'])
     gc = mc.ml2p_iter2gc(minus_log_prob_iter=scored_testing)
     secondary_training = []
-    for pwd, _, num, gn, _, _ in gc:
-        if gn <= guess_number_threshold:
-            secondary_training.extend([pwd] * num)
+    tag = f"{guess_number_threshold:.0e}"
+    fcracked = os.path.join(save_in_folder, f"cracked-{tag}.txt")
+    fmodel = os.path.join(save_in_folder, f"model-{tag}.txt")
+    with open(fmodel, 'wb') as fd:
+        pickle.dump((backwords, words, config), file=fd)
+        pass
+    with open(fcracked, 'w') as fout:
+        for pwd, prob, num, gn, _, _ in gc:
+            if gn <= guess_number_threshold:
+                secondary_training.extend([pwd] * num)
+                fout.write(f"{pwd}\t{prob:.8f}\t{num}\t{gn}\n")
+        pass
     secondary_sample_size = kwargs['secondary_sample']
     if secondary_sample_size < len(secondary_training):
         print(f"We sample {secondary_sample_size} passwords to perform secondary training in the next round",
               file=sys.stderr)
-        secondary_training = random.sample(secondary_training, kwargs['secondary_sample'])
+        fsample = os.path.join(save_in_folder, f"sampled-{tag}.txt")
+        secondary_training = random.sample(secondary_training, secondary_sample_size)
+        with open(fsample, 'w') as fout:
+            for pwd in secondary_training:
+                fout.write(f"{pwd}\n")
+            pass
     return nwords_dict, _words, config, secondary_training
 
 
@@ -45,9 +62,11 @@ def wrapper():
                      help="Each threshold refers to a guess number threshold. "
                           "The model will crack passwords under the threshold "
                           "and use the cracked passwords as secondary training file")
+    cli.add_argument("-s", "--save", dest="save", required=True, type=str,
+                     help='A folder, results will be saved in this folder')
     cli.add_argument("--size", dest="size", type=int, required=False, default=100000, help="sample size")
-    cli.add_argument("--secondary-sample", dest="secondary_sample", type=int, required=False, default=-1,
-                     help="use some of the cracked passwords for secondary training. set -1 to use all.")
+    cli.add_argument("--secondary-sample", dest="secondary_sample", type=int, required=False, default=10000000000,
+                     help="use some of the cracked passwords for secondary training.")
     cli.add_argument("--splitter", dest="splitter", type=str, required=False, default="empty",
                      help="how to divide different columns from the input file, "
                           "set it \"empty\" to represent \'\', \"space\" for \' \', \"tab\" for \'\t\'")
@@ -72,6 +91,8 @@ def wrapper():
               'training_list': training_list}
     backwords, words = None, None
     training = args.training
+    if not os.path.exists(args.save):
+        os.mkdir(args.save)
     for guess_number_threshold in args.guess_number_thresholds:
         backwords, words, config, training = secondary_cracker(
             backwords, words, config=config,
@@ -79,7 +100,11 @@ def wrapper():
             training=training, splitter=args.splitter,
             start4words=args.start4words, skip4words=args.skip4words,
             max_gram=args.max_gram, size=args.size, max_iter=args.max_iter,
-            testing=args.testing,
+            testing=args.testing, save=args.save, secondary_sample=args.secondary_sample,
         )
         pass
     pass
+
+
+if __name__ == '__main__':
+    wrapper()

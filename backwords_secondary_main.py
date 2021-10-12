@@ -105,7 +105,8 @@ def wrapper():
     # guess_number_thresholds.append(-1)
 
     for guess_number_threshold in guess_number_thresholds:
-        print(f"Training Model, obtaining passwords whose guess numbers are less than {guess_number_threshold:.0e}",
+        print(f"Obtaining passwords "
+              f"whose guess numbers are less than {guess_number_threshold:.0e}",
               file=sys.stderr)
         backwords, words, config, training = secondary_cracker(
             backwords, words, config=config,
@@ -125,6 +126,7 @@ def wrapper():
     f_final_model = os.path.join(args.save, "final_model.pickle")
     with open(f_final_model, 'wb') as fout_final_model:
         pickle.dump((backwords, words, config), file=fout_final_model)
+    print("Training phase done.", file=sys.stderr)
     backword_mc = BackWordsSecondaryMonteCarlo((backwords, words, config), max_iter=args.max_iter)
     ml2p_list = backword_mc.sample(size=args.size)
     mc = MonteCarloLib(ml2p_list)

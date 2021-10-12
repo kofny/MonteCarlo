@@ -2,6 +2,7 @@
 This file is the portal of secondary training for backwords
 """
 import argparse
+import json
 import os.path
 import pickle
 import random
@@ -22,11 +23,7 @@ def secondary_cracker(backwords, words, config, guess_number_threshold, **kwargs
         nwords_dict=backwords, words=words)
     fmodel = os.path.join(save_in_folder, f"model-to-crack-{tag}.pickle")
     with open(fmodel, 'wb') as fd:
-        training = kwargs['training']
-        if isinstance(training, list):
-            config['training_list'].append(tag)
-        else:
-            config['training_list'].append(training.name)
+        config['training_list'].append(f"{guess_number_threshold}")
         pickle.dump((nwords_dict, words, config), file=fd)
     backword_mc = BackWordsSecondaryMonteCarlo((nwords_dict, _words, config), max_iter=kwargs['max_iter'])
     ml2p_list = backword_mc.sample(size=kwargs['size'])
@@ -93,7 +90,7 @@ def wrapper():
     splitter_map = {'empty': '', 'space': ' ', 'tab': '\t'}
     if args.splitter.lower() in splitter_map:
         args.splitter = splitter_map[args.splitter.lower()]
-    start_chr, end_chr, training_list = '\x03', '\x00', []
+    start_chr, end_chr, training_list = '\x03', '\x00', [args.training.name]
     config = {'start_chr': start_chr, 'end_chr': end_chr, 'max_gram': args.max_gram, 'threshold': args.threshold,
               'training_list': training_list}
     backwords, words = None, None
@@ -135,6 +132,9 @@ def wrapper():
     f_final_result = os.path.join(args.save, "final_result.txt")
     with open(f_final_result, 'w') as fout_final_result:
         mc.write2(fout_final_result)
+    f_config = os.path.join(args.save, "config.json")
+    with open(f_config, 'w') as fout_config:
+        json.dump(config, fp=fout_config, indent=2)
     pass
 
 

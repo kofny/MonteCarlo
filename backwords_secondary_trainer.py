@@ -43,7 +43,7 @@ def wrapper():
     nwords_dict, words = backwords_counter(
         nwords_list=args.training, splitter=args.splitter, start_chr=start_chr, end_chr=end_chr,
         start4words=args.start4words, step4words=args.skip4words, max_gram=args.max_gram,
-        nwords_dict=base_nwords_dict, words=words)
+        nwords_dict=base_nwords_dict, words=words, threshold=args.threshold)
     with open(args.save, 'wb') as f_save:
         training_list.append(args.training.name)
         pickle.dump(

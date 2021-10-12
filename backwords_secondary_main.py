@@ -20,7 +20,7 @@ def secondary_cracker(backwords, words, config, guess_number_threshold, **kwargs
         nwords_list=kwargs['training'], splitter=kwargs['splitter'], start_chr=config['start_chr'],
         end_chr=config['end_chr'],
         start4words=kwargs['start4words'], step4words=kwargs['skip4words'], max_gram=kwargs['max_gram'],
-        nwords_dict=backwords, words=words)
+        nwords_dict=backwords, words=words, threshold=kwargs['threshold'])
     fmodel = os.path.join(save_in_folder, f"model-to-crack-{tag}.pickle")
     with open(fmodel, 'wb') as fd:
         config['training_list'].append(f"{guess_number_threshold}")
@@ -112,13 +112,13 @@ def wrapper():
             start4words=args.start4words, skip4words=args.skip4words,
             max_gram=args.max_gram, size=args.size, max_iter=args.max_iter,
             testing=args.testing, save=args.save, secondary_sample=args.secondary_sample,
-            already_cracked=already_cracked,
+            already_cracked=already_cracked, threshold=args.threshold
         )
         pass
     backwords, words = backwords_counter(
         training, splitter=args.splitter, start_chr=start_chr, end_chr=end_chr,
         start4words=args.start4words, step4words=args.skip4words, max_gram=args.max_gram,
-        nwords_dict=backwords, words=words
+        nwords_dict=backwords, words=words, threshold=args.threshold
     )
     f_final_model = os.path.join(args.save, "final_model.pickle")
     with open(f_final_model, 'wb') as fout_final_model:

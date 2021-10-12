@@ -33,7 +33,8 @@ class NWordsMonteCarlo(MonteCarlo):
         else:
             return tuple(pwd[1 - self.__n:])
 
-    def _structures(self, pwd, possible_list: List[float], container: List, probabilities: List, target_len: int,
+    def _structures(self, pwd, possible_list: List[float], component_list: List[List[str]],
+                    container: List, probabilities: List, target_len: int,
                     iter_max: int, cur_iter: List[int]):
         if cur_iter[0] >= iter_max:
             return
@@ -46,12 +47,15 @@ class NWordsMonteCarlo(MonteCarlo):
                     probabilities.append(self.nwords.get(prev)[0].get(left))
                 else:
                     continue
-                if len("".join([c for c in container if c != self.start_chr])) == target_len:
+                components = [c for c in container if c != self.start_chr]
+                if len("".join(components)) == target_len:
                     minus_log2_prob = sum([self.minus_log2(p) for p in probabilities])
                     if possible_list[0] > minus_log2_prob:
                         possible_list[0] = minus_log2_prob
+                        component_list[0] = components.copy()
                     cur_iter[0] += 1
-                self._structures(pwd[index:], possible_list, container, probabilities, target_len, iter_max, cur_iter)
+                self._structures(pwd[index:], possible_list, component_list, container, probabilities, target_len,
+                                 iter_max, cur_iter)
                 container.pop()
                 probabilities.pop()
 
@@ -77,11 +81,13 @@ class NWordsMonteCarlo(MonteCarlo):
         probabilities[0] = min(prob, probabilities[0])
         pass
 
-    def calc_ml2p(self, pwd: str) -> float:
+    def calc_ml2p(self, pwd: str) -> Tuple[float, List[str]]:
         possible_list = [float(1022)]
-        self._structures(pwd + self.end_chr, possible_list, list(self.default_start),
+        component_list = [[pwd]]
+        self._structures(pwd + self.end_chr, possible_list, component_list, list(self.default_start),
                          [], len(pwd) + len(self.end_chr), 100000000000000000000000000000000000, [0])
-        return possible_list[0]
+        components = [c for c in component_list[0] if c != self.end_chr]
+        return possible_list[0], components
 
     def sample1(self) -> (float, str):
         pwd = self.default_start

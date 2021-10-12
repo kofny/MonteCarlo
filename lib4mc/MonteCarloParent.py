@@ -1,7 +1,7 @@
 import abc
 from collections import defaultdict
 from math import log2
-from typing import List, TextIO, Tuple
+from typing import List, TextIO, Tuple, Union
 
 from tqdm import tqdm
 
@@ -14,13 +14,13 @@ class MonteCarlo(metaclass=abc.ABCMeta):
         return -log2(prob)
 
     @abc.abstractmethod
-    def calc_ml2p(self, pwd: str) -> float:
+    def calc_ml2p(self, pwd: str) -> Tuple[float, List[str]]:
         """
 
         :param pwd: password
         :return:
         """
-        return .0
+        return .0, []
 
     @abc.abstractmethod
     def sample1(self) -> (float, str):
@@ -37,9 +37,11 @@ class MonteCarlo(metaclass=abc.ABCMeta):
             results.append(prob)
         return results
 
-    def parse_file(self, testing_set: TextIO) -> List[Tuple[str, int, float]]:
+    def parse_file(self, testing_set: TextIO, using_component: bool = False) -> \
+            List[Tuple[Union[str, List[str]], int, float]]:
         """
         get minus log prob for test set
+        :param using_component:
         :param testing_set: test set
         :return: List of tuple (pwd, appearance, minus log prob)
         """
@@ -48,9 +50,12 @@ class MonteCarlo(metaclass=abc.ABCMeta):
         for line in tqdm(testing_set, desc="Reading: ", total=line_num):
             line = line.strip("\r\n")
             pwd_counter[line] += 1
-        res: List[Tuple[str, int, float]] = []
-        for pwd, num in tqdm(pwd_counter.items(), desc="Scoring: "):
-            _mlp = self.calc_ml2p(pwd)
-            res.append((pwd, num, _mlp))
+        res: List[Tuple[Union[str, List[str]], int, float]] = []
+        for pwd, num in tqdm(pwd_counter.items(), desc="Scoring: "):  # type: str, int
+            _mlp, components = self.calc_ml2p(pwd)
+            if using_component:
+                res.append((components, num, _mlp))
+            else:
+                res.append((pwd, num, _mlp))
         res = sorted(res, key=lambda x: x[2])
         return res

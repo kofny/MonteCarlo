@@ -40,11 +40,13 @@ class BackWordsMonteCarlo(NWordsMonteCarlo):
             tar = tuple()
         return tar
 
-    def calc_ml2p(self, pwd: str) -> float:
+    def calc_ml2p(self, pwd: str) -> Tuple[float, List[str]]:
         possible_list = [float(1022)]
-        self._structures(pwd + self.end_chr, possible_list, list(self.default_start),
+        component_list = [[pwd]]
+        self._structures(pwd + self.end_chr, possible_list, component_list, list(self.default_start),
                          [], len(pwd) + len(self.end_chr), self.max_iter, [0])
-        return possible_list[0]
+        components = [c for c in component_list[0] if c != self.end_chr]
+        return possible_list[0], components
 
 
 def wrapper():
@@ -82,7 +84,7 @@ def wrapper():
         usr_i = ""
         while usr_i != "exit":
             usr_i = input("type in passwords: ")
-            prob = backword_mc.calc_ml2p(usr_i)
+            prob, components = backword_mc.calc_ml2p(usr_i)
             print(prob)
         return
     ml2p_list = backword_mc.sample(size=args.size)

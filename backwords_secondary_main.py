@@ -14,7 +14,7 @@ from lib4mc.MonteCarloLib import MonteCarloLib
 
 def secondary_cracker(backwords, words, config, guess_number_threshold, **kwargs):
     save_in_folder = kwargs['save']
-    tag = f"{guess_number_threshold:.0e}"
+    tag = f"{guess_number_threshold:.0g}"
     nwords_dict, _words = backwords_counter(
         nwords_list=kwargs['training'], splitter=kwargs['splitter'], start_chr=config['start_chr'],
         end_chr=config['end_chr'],
@@ -31,17 +31,20 @@ def secondary_cracker(backwords, words, config, guess_number_threshold, **kwargs
     backword_mc = BackWordsSecondaryMonteCarlo((nwords_dict, _words, config), max_iter=kwargs['max_iter'])
     ml2p_list = backword_mc.sample(size=kwargs['size'])
     mc = MonteCarloLib(ml2p_list)
-    scored_testing = backword_mc.parse_file(kwargs['testing'])
+    scored_testing = backword_mc.parse_file(kwargs['testing'], using_component=True)
     gc = mc.ml2p_iter2gc(minus_log_prob_iter=scored_testing)
     secondary_training = []
     fcracked = os.path.join(save_in_folder, f"cracked-{tag}.txt")
     already_cracked = kwargs['already_cracked']
     with open(fcracked, 'w') as fout:
-        for pwd, prob, num, gn, _, _ in gc:
-            if gn <= guess_number_threshold and pwd not in already_cracked:
-                secondary_training.extend([pwd] * num)
-                fout.write(f"{pwd}\t{prob:.8f}\t{num}\t{gn}\n")
-                already_cracked.add(pwd)
+        for pwd, prob, num, gn, cracked, ratio in gc:
+            _pwd = kwargs['splitter'].join(pwd)
+            if gn <= guess_number_threshold and _pwd not in already_cracked and prob < 1000:
+                secondary_training.extend([_pwd] * num)
+                fout.write(f"{_pwd}\t{prob:.8f}\t{num}\t{gn}\t{cracked}\t{ratio}\n")
+                already_cracked.add(_pwd)
+            else:
+                break
         pass
     secondary_sample_size = kwargs['secondary_sample']
     if secondary_sample_size < len(secondary_training):
@@ -98,7 +101,10 @@ def wrapper():
     if not os.path.exists(args.save):
         os.mkdir(args.save)
     already_cracked = set()
-    for guess_number_threshold in args.guess_number_thresholds:
+    guess_number_thresholds = args.guess_number_thresholds
+    # guess_number_thresholds.append(-1)
+
+    for guess_number_threshold in guess_number_thresholds:
         print(f"Training Model, obtaining passwords whose guess numbers are less than {guess_number_threshold:.0e}",
               file=sys.stderr)
         backwords, words, config, training = secondary_cracker(
@@ -111,6 +117,22 @@ def wrapper():
             already_cracked=already_cracked,
         )
         pass
+    backwords, words = backwords_counter(
+        training, splitter=args.splitter, start_chr=start_chr, end_chr=end_chr,
+        start4words=args.start4words, step4words=args.skip4words, max_gram=args.max_gram,
+        nwords_dict=backwords, words=words
+    )
+    f_final_model = os.path.join(args.save, "final_model.pickle")
+    with open(f_final_model, 'wb') as fout_final_model:
+        pickle.dump((backwords, words, config), file=fout_final_model)
+    backword_mc = BackWordsSecondaryMonteCarlo((backwords, words, config), max_iter=args.max_iter)
+    ml2p_list = backword_mc.sample(size=args.size)
+    mc = MonteCarloLib(ml2p_list)
+    scored_testing = backword_mc.parse_file(args.testing)
+    mc.ml2p_iter2gc(minus_log_prob_iter=scored_testing)
+    f_final_result = os.path.join(args.save, "final_result.txt")
+    with open(f_final_result, 'w') as fout_final_result:
+        mc.write2(fout_final_result)
     pass
 
 

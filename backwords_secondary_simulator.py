@@ -1,7 +1,6 @@
 import argparse
 import pickle
 import sys
-from typing import BinaryIO
 
 from backwords.backwords_secondary_trainer import freq2prob
 from backwords_simulator import BackWordsMonteCarlo
@@ -43,7 +42,7 @@ def wrapper():
         usr_i = ""
         while usr_i != "exit":
             usr_i = input("type in passwords: ")
-            prob = backword_mc.calc_ml2p(usr_i)
+            prob, components = backword_mc.calc_ml2p(usr_i)
             print(prob)
         return
     ml2p_list = backword_mc.sample(size=args.size)

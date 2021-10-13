@@ -15,7 +15,7 @@ class BackWordsSecondaryMonteCarlo(BackWordsMonteCarlo):
             backwords, words, config = model
         else:
             backwords, words, config = pickle.load(model)
-        backwords = freq2prob(backwords)
+        backwords = freq2prob(backwords, config['threshold'])
         self.nwords = expand_2d(backwords)
         self.end_chr = config['end_chr']
         self.words = words

@@ -1,7 +1,7 @@
 import abc
 from collections import defaultdict
 from math import log2
-from typing import List, TextIO, Tuple, Union
+from typing import List, TextIO, Tuple, Union, Set
 
 from tqdm import tqdm
 
@@ -30,11 +30,17 @@ class MonteCarlo(metaclass=abc.ABCMeta):
         """
         return .0, ""
 
-    def sample(self, size: int) -> List[float]:
+    def sample(self, size: int, sampled_pwds: Set[str] = None, clearIfNotNone: bool = True) -> List[float]:
         results = []
+        samples = set()
         for _ in tqdm(iterable=range(size), desc="Sampling: "):
             prob, pwd = self.sample1()
             results.append(prob)
+            samples.add(pwd)
+        if sampled_pwds is not None:
+            if clearIfNotNone:
+                sampled_pwds.clear()
+            sampled_pwds.update(samples)
         return results
 
     def parse_file(self, testing_set: TextIO, using_component: bool = False) -> \

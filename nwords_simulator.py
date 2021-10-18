@@ -113,7 +113,7 @@ class NWordsMonteCarlo(MonteCarlo):
                 pwd = self.default_start
                 prob = .0
                 pwd_len = 0
-        return prob, "".join(pwd)
+        return prob, "".join([c for c in pwd if c != self.start_chr])
 
 
 def wrapper():

@@ -26,7 +26,22 @@ def secondary_cracker(backwords, words, config, guess_number_threshold, **kwargs
         config['training_list'].append(f"{guess_number_threshold}")
         pickle.dump((nwords_dict, words, config), file=fd)
     backword_mc = BackWordsSecondaryMonteCarlo((nwords_dict, _words, config), max_iter=kwargs['max_iter'])
-    ml2p_list = backword_mc.sample(size=kwargs['size'])
+    # Note: this part is to "generate" some guesses and crack passwords in the testing dataset
+    #
+    # Besides, here we allow the user to provide a list which holds the sampled passwords
+    # Then, we calculate the intersection of the sampled passwords and the testing dataset to
+    # obtain the cracked passwords
+    using_sample_attack = kwargs['using_sample_attack']
+    sampled_pwds = None
+    if using_sample_attack:
+        sampled_pwds = set()
+    ml2p_list = backword_mc.sample(size=kwargs['size'], sampled_pwds=sampled_pwds)
+    if using_sample_attack:
+        f_samples = os.path.join(save_in_folder, f"samples-{tag}.txt")
+        with open(f_samples, 'w') as fout_samples:
+            for pwd in sampled_pwds:
+                fout_samples.write(f"{pwd}\n")
+        pass
     mc = MonteCarloLib(ml2p_list)
     scored_testing = backword_mc.parse_file(kwargs['testing'], using_component=True)
     gc = mc.ml2p_iter2gc(minus_log_prob_iter=scored_testing)
@@ -36,12 +51,14 @@ def secondary_cracker(backwords, words, config, guess_number_threshold, **kwargs
     with open(fcracked, 'w') as fout:
         for pwd, prob, num, gn, cracked, ratio in gc:
             _pwd = kwargs['splitter'].join(pwd)
-            if gn <= guess_number_threshold and _pwd not in already_cracked and prob < 1000:
+            if _pwd in already_cracked:
+                continue
+            valid = (using_sample_attack and _pwd in sampled_pwds) or \
+                    (not using_sample_attack and gn <= guess_number_threshold and prob < 1000)
+            if valid:
                 secondary_training.extend([_pwd] * num)
                 fout.write(f"{_pwd}\t{prob:.8f}\t{num}\t{gn}\t{cracked}\t{ratio}\n")
                 already_cracked.add(_pwd)
-            else:
-                break
         pass
     secondary_sample_size = kwargs['secondary_sample']
     if secondary_sample_size < len(secondary_training):
@@ -86,6 +103,9 @@ def wrapper():
                      help="grams whose frequencies less than the threshold will be ignored")
     cli.add_argument("--max-iter", dest="max_iter", required=False, default=10 ** 20, type=int,
                      help="max iteration when calculating the maximum probability of a password")
+    cli.add_argument("--using-samples", dest='using_sample_attack', required=False, action="store_true",
+                     help="set it true if you want generate random passwords based on Monte Carlo "
+                          "to crack passwords in the testing dataset")
     args = cli.parse_args()
     splitter_map = {'empty': '', 'space': ' ', 'tab': '\t'}
     if args.splitter.lower() in splitter_map:
@@ -112,7 +132,8 @@ def wrapper():
             start4words=args.start4words, skip4words=args.skip4words,
             max_gram=args.max_gram, size=args.size, max_iter=args.max_iter,
             testing=args.testing, save=args.save, secondary_sample=args.secondary_sample,
-            already_cracked=already_cracked, threshold=args.threshold
+            already_cracked=already_cracked, threshold=args.threshold,
+            using_sample_attack=args.using_sample_attack
         )
         pass
     backwords, words = backwords_counter(

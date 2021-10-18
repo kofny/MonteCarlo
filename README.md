@@ -29,8 +29,7 @@ python backwords_secondary_main.py \
     -i 'training file' \
     -t 'testing file' \
     -s 'save intermediate files in this folder' \
-    --iter 'the number of the iterations' \
-    --using-samples \
+    --using-samples 'the number of iterations to sample passwords' \
     --start4word 'the index of the first "chunk" or "character" for each password' \
     --skip4word 'start4word + skip4word = the next index of the "chunk" or "character"' \
     --splitter 'use "empty" for character level backoff, "space" for " ", "tab" for "\t"' \

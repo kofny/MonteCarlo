@@ -82,8 +82,6 @@ def wrapper():
                      help="The testing file, each password a line")
     cli.add_argument("-s", "--save", dest="save", required=True, type=str,
                      help='A folder, results will be saved in this folder')
-    cli.add_argument("--iter", dest='iter', required=True, type=int,
-                     help="Specify the iterations needed to obtain the final model")
     cli.add_argument("-g", "--guess-number-thresholds", dest="guess_number_thresholds", required=False,
                      type=int, nargs="+",
                      help="Each threshold refers to a guess number threshold. "
@@ -107,8 +105,8 @@ def wrapper():
                      help="grams whose frequencies less than the threshold will be ignored")
     cli.add_argument("--max-iter", dest="max_iter", required=False, default=10 ** 20, type=int,
                      help="max iteration when calculating the maximum probability of a password")
-    cli.add_argument("--using-samples", dest='using_sample_attack', required=False, action="store_true",
-                     help="set it true if you want generate random passwords based on Monte Carlo "
+    cli.add_argument("--using-samples", dest='using_sample_attack', required=False, type=int, default=1,
+                     help="set the number of iterations if you want generate random passwords based on Monte Carlo "
                           "to crack passwords in the testing dataset")
     args = cli.parse_args()
     splitter_map = {'empty': '', 'space': ' ', 'tab': '\t'}
@@ -124,9 +122,14 @@ def wrapper():
     already_cracked = set()
     guess_number_thresholds: List[int] = args.guess_number_thresholds
     # guess_number_thresholds.append(-1)
-    if guess_number_thresholds is not None and len(guess_number_thresholds) != args.iter:
-        raise Exception(f"The number of elements in `guess number thresholds` should be equal to `iter`")
-    for idx in range(args.iter):
+    if guess_number_thresholds is not None:
+        rounds = len(guess_number_thresholds)
+        print(f"Guess number mode", file=sys.stderr, end=', ')
+    else:
+        rounds = args.using_sample_attack
+        print(f"Sample mode", file=sys.stderr)
+    print(f"We will have {rounds} rounds", file=sys.stderr, end=', ')
+    for idx in range(rounds):
         guess_number_threshold = guess_number_thresholds[idx] if guess_number_thresholds is not None else -1
         print(f"The {idx}-th iteration", file=sys.stderr)
         backwords, words, config, training = secondary_cracker(

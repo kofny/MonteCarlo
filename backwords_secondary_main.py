@@ -7,6 +7,7 @@ import os.path
 import pickle
 import random
 import sys
+from typing import List
 
 from backwords.backwords_secondary_trainer import backwords_counter
 from backwords_secondary_simulator import BackWordsSecondaryMonteCarlo
@@ -15,7 +16,7 @@ from lib4mc.MonteCarloLib import MonteCarloLib
 
 def secondary_cracker(backwords, words, config, guess_number_threshold, **kwargs):
     save_in_folder = kwargs['save']
-    tag = f"{guess_number_threshold:.0g}"
+    tag = kwargs['tag']
     nwords_dict, _words = backwords_counter(
         nwords_list=kwargs['training'], splitter=kwargs['splitter'], start_chr=config['start_chr'],
         end_chr=config['end_chr'],
@@ -79,12 +80,15 @@ def wrapper():
                      help="The training file, each password a line")
     cli.add_argument("-t", "--testing", dest="testing", type=argparse.FileType('r'), required=True,
                      help="The testing file, each password a line")
-    cli.add_argument("-g", "--guess-number-thresholds", dest="guess_number_thresholds", type=int, nargs="+",
+    cli.add_argument("-s", "--save", dest="save", required=True, type=str,
+                     help='A folder, results will be saved in this folder')
+    cli.add_argument("--iter", dest='iter', required=True, type=int,
+                     help="Specify the iterations needed to obtain the final model")
+    cli.add_argument("-g", "--guess-number-thresholds", dest="guess_number_thresholds", required=False,
+                     type=int, nargs="+",
                      help="Each threshold refers to a guess number threshold. "
                           "The model will crack passwords under the threshold "
                           "and use the cracked passwords as secondary training file")
-    cli.add_argument("-s", "--save", dest="save", required=True, type=str,
-                     help='A folder, results will be saved in this folder')
     cli.add_argument("--size", dest="size", type=int, required=False, default=100000, help="sample size")
     cli.add_argument("--secondary-sample", dest="secondary_sample", type=int, required=False, default=10000000000,
                      help="use some of the cracked passwords for secondary training.")
@@ -118,13 +122,13 @@ def wrapper():
     if not os.path.exists(args.save):
         os.mkdir(args.save)
     already_cracked = set()
-    guess_number_thresholds = args.guess_number_thresholds
+    guess_number_thresholds: List[int] = args.guess_number_thresholds
     # guess_number_thresholds.append(-1)
-
-    for guess_number_threshold in guess_number_thresholds:
-        print(f"Obtaining passwords "
-              f"whose guess numbers are less than {guess_number_threshold:.0e}",
-              file=sys.stderr)
+    if guess_number_thresholds is not None and len(guess_number_thresholds) != args.iter:
+        raise Exception(f"The number of elements in `guess number thresholds` should be equal to `iter`")
+    for idx in range(args.iter):
+        guess_number_threshold = guess_number_thresholds[idx] if guess_number_thresholds is not None else -1
+        print(f"The {idx}-th iteration", file=sys.stderr)
         backwords, words, config, training = secondary_cracker(
             backwords, words, config=config,
             guess_number_threshold=guess_number_threshold,
@@ -133,7 +137,7 @@ def wrapper():
             max_gram=args.max_gram, size=args.size, max_iter=args.max_iter,
             testing=args.testing, save=args.save, secondary_sample=args.secondary_sample,
             already_cracked=already_cracked, threshold=args.threshold,
-            using_sample_attack=args.using_sample_attack
+            using_sample_attack=args.using_sample_attack, tag=f"iter-{idx}",
         )
         pass
     backwords, words = backwords_counter(

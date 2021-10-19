@@ -57,7 +57,7 @@ def secondary_cracker(backwords, words, config, guess_number_threshold, **kwargs
             if _pwd in already_cracked:
                 continue
             valid = (using_sample_attack and _pwd in sampled_pwds) or \
-                    (not using_sample_attack and gn <= guess_number_threshold and prob < 1000)
+                    (not using_sample_attack and gn <= guess_number_threshold and 0 < prob < 1000)
             if valid:
                 secondary_training.extend([_pwd] * num)
                 fout.write(f"{_pwd}\t{prob:.8f}\t{num}\t{gn + prior_guesses}\t{cracked}\t{ratio:5.2f}\n")

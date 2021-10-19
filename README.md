@@ -5,6 +5,8 @@ the result.
 
 ## Update 2021/10/19
 
+> Intermediate results could affect the final results
+
 Now we can use `--based-on-prior-guesses` to calculate guess numbers of the passwords.
 For example, if we have two rounds, and the first round generate 10,000 guesses, then 
 the guesses generated during the second round will start from 10,001.

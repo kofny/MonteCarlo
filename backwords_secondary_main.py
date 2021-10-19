@@ -7,6 +7,7 @@ import os.path
 import pickle
 import random
 import sys
+from collections import defaultdict
 from typing import List
 
 from backwords.backwords_secondary_trainer import backwords_counter
@@ -35,13 +36,13 @@ def secondary_cracker(backwords, words, config, guess_number_threshold, **kwargs
     using_sample_attack = kwargs['using_sample_attack']
     sampled_pwds = None
     if using_sample_attack:
-        sampled_pwds = set()
+        sampled_pwds = defaultdict(int)
     ml2p_list = backword_mc.sample(size=kwargs['size'], sampled_pwds=sampled_pwds)
     if using_sample_attack:
         f_samples = os.path.join(save_in_folder, f"samples-{tag}.txt")
         with open(f_samples, 'w') as fout_samples:
-            for pwd in sampled_pwds:
-                fout_samples.write(f"{pwd}\n")
+            for pwd, cnt in sampled_pwds.items():
+                fout_samples.write(f"{pwd}\t{cnt}\n")
         pass
     mc = MonteCarloLib(ml2p_list)
     scored_testing = backword_mc.parse_file(kwargs['testing'], using_component=True)

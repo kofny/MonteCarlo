@@ -3,6 +3,12 @@
 This is a repo for Monte Carlo method. Some of guessing method has been rewritten and we can get more information from
 the result.
 
+## Update 2021/10/19
+
+Now we can use `--based-on-prior-guesses` to calculate guess numbers of the passwords.
+For example, if we have two rounds, and the first round generate 10,000 guesses, then 
+the guesses generated during the second round will start from 10,001.
+
 ## Update 2021/10/09
 
 > Subword level Backoff, using secondary training file

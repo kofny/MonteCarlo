@@ -8,10 +8,11 @@ import pickle
 import random
 import sys
 from collections import defaultdict
-from typing import List
+from typing import List, Tuple
 
 from backwords.backwords_secondary_trainer import backwords_counter
 from backwords_secondary_simulator import BackWordsSecondaryMonteCarlo
+from lib4mc.FileLib import wc_l
 from lib4mc.MonteCarloLib import MonteCarloLib
 
 
@@ -50,8 +51,8 @@ def secondary_cracker(backwords, words, config, guess_number_threshold, **kwargs
     secondary_training = []
     fcracked = os.path.join(save_in_folder, f"cracked-{tag}.txt")
     already_cracked = kwargs['already_cracked']
+    cum: List[Tuple[str, float, int, int]] = kwargs['cum']
     with open(fcracked, 'w') as fout:
-        prior_guesses = kwargs['prior_guesses']
         for pwd, prob, num, gn, cracked, ratio in gc:
             _pwd = kwargs['splitter'].join(pwd)
             if _pwd in already_cracked:
@@ -60,7 +61,8 @@ def secondary_cracker(backwords, words, config, guess_number_threshold, **kwargs
                     (not using_sample_attack and gn <= guess_number_threshold and 0 < prob < 1000)
             if valid:
                 secondary_training.extend([_pwd] * num)
-                fout.write(f"{_pwd}\t{prob:.8f}\t{num}\t{gn + prior_guesses}\t{cracked}\t{ratio:5.2f}\n")
+                cum.append((_pwd, prob, num, gn))
+                fout.write(f"{_pwd}\t{prob:.8f}\t{num}\t{gn}\n")
                 already_cracked.add(_pwd)
         pass
     secondary_sample_size = kwargs['secondary_sample']
@@ -131,16 +133,20 @@ def wrapper():
     if guess_number_thresholds is not None:
         rounds = len(guess_number_thresholds)
         print(f"Guess number mode", file=sys.stderr, end=', ')
+        using_sample_attack = False
     else:
         rounds = args.using_sample_attack
+        using_sample_attack = True
         guess_number_thresholds = [args.size] * rounds
         print(f"Sample mode", file=sys.stderr)
     print(f"We will have {rounds} rounds", file=sys.stderr, end=', ')
+    cums: List[List[Tuple[str, float, int, int]]] = []
     for idx in range(rounds):
         # guess_number_threshold have default value of [args.size, ..., args.size] if it is None
         guess_number_threshold = guess_number_thresholds[idx]
         # Therefore, prior_guesses will always be args.size if `--using-samples`
         print(f"The {idx}-th iteration", file=sys.stderr)
+        cum = []
         backwords, words, config, training = secondary_cracker(
             backwords, words, config=config,
             guess_number_threshold=guess_number_threshold,
@@ -148,12 +154,11 @@ def wrapper():
             start4words=args.start4words, skip4words=args.skip4words,
             max_gram=args.max_gram, size=args.size, max_iter=args.max_iter,
             testing=args.testing, save=args.save, secondary_sample=args.secondary_sample,
-            already_cracked=already_cracked, prior_guesses=prior_guesses,
+            already_cracked=already_cracked, cum=cum,
             threshold=args.threshold,
-            using_sample_attack=args.using_sample_attack, tag=f"iter-{idx}",
+            using_sample_attack=using_sample_attack, tag=f"iter-{idx}",
         )
-        if based_on_prior_guesses:
-            prior_guesses += guess_number_threshold
+        cums.append(cum)
         pass
     backwords, words = backwords_counter(
         training, splitter=args.splitter, start_chr=start_chr, end_chr=end_chr,
@@ -169,20 +174,32 @@ def wrapper():
     mc = MonteCarloLib(ml2p_list)
     scored_testing = backword_mc.parse_file(args.testing)
     gc = mc.ml2p_iter2gc(minus_log_prob_iter=scored_testing)
-    f_final_result = os.path.join(args.save, "final_result.txt")
-    with open(f_final_result, 'w') as fout_final_result:
-        if based_on_prior_guesses:
-            for pwd, prob, num, gn, cracked, ratio in gc:
-                if pwd in already_cracked:
-                    continue
-                fout_final_result.write(f"{pwd}\t{prob:.8f}\t{num}\t{gn + prior_guesses}\t{cracked}\t{ratio:5.2f}\n")
-                pass
+    # note that this is the cracked passwords obtained according to the final model
+    f_iter_result = os.path.join(args.save, "iter_result.txt")
+    with open(f_iter_result, 'w') as fout_iter_result:
+        cum = []
+        for pwd, prob, num, gn, cracked, ratio in gc:
+            fout_iter_result.write(f"{pwd}\t{prob:.8f}\t{num}\t{gn}\t{cracked}\t{ratio:5.2f}\n")
+            if pwd not in already_cracked:
+                cum.append((pwd, prob, num, gn))
             pass
-        else:
-            mc.write2(fout_final_result)
+        cums.append(cum)
+        pass
+    #
+    f_sectional_result = os.path.join(args.save, "sectional_result.txt")
+    with open(f_sectional_result, "w") as fout_sectional_result:
+        _cracked = 0
+        _total = wc_l(args.testing)
+        for gnt, cum in zip([0, *guess_number_thresholds], cums):
+            for (_pwd, _prob, _n, _gn) in cum:
+                _cracked += _n
+                _ratio = _cracked / _total * 100
+                fout_sectional_result.write(f"{_pwd}\t{_prob:.8f}\t{_n}\t{_gn + gnt}\t{_cracked}\t{_ratio:5.2f}\n")
+        pass
     f_config = os.path.join(args.save, "config.json")
     with open(f_config, 'w') as fout_config:
         json.dump(config, fp=fout_config, indent=2)
+    args.testing.close()
     pass
 
 

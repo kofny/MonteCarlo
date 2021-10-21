@@ -93,6 +93,8 @@ def backwords_counter(nwords_list: TextIO, splitter: str, start_chr: str, end_ch
                 continue
             origin = nwords_dict[prefix]
             for trans, v in transitions.items():
+                if trans not in origin:
+                    origin[trans] = 0
                 origin[trans] += v
         pass
     return nwords_dict, words

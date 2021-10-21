@@ -86,10 +86,9 @@ def backwords_counter(nwords_list: TextIO, splitter: str, start_chr: str, end_ch
         """
         for prefix, transitions in tmp_nwords_dict.items():
 
-            if all([cnt < threshold for cnt in transitions.values()]):
-                continue
             if prefix not in nwords_dict:
-                nwords_dict[prefix] = transitions
+                if any([cnt >= threshold for cnt in transitions.values()]):
+                    nwords_dict[prefix] = transitions
                 continue
             origin = nwords_dict[prefix]
             for trans, v in transitions.items():

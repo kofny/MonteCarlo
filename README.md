@@ -7,9 +7,15 @@ the result.
 
 > Intermediate results could affect the final results
 
-Now we can use `--based-on-prior-guesses` to calculate guess numbers of the passwords.
-For example, if we have two rounds, and the first round generate 10,000 guesses, then 
-the guesses generated during the second round will start from 10,001.
+Now we will generate two formats of the results.
+
+First, the results obtained by the final model (named __iter_results__).
+
+Second, the results obtained by all models involved (named __sectional_results__).
+
+~~Now we can use `--based-on-prior-guesses` to calculate guess numbers of the passwords. For example, if we have two
+rounds, and the first round generate 10,000 guesses, then the guesses generated during the second round will start from
+10,001.~~
 
 ## Update 2021/10/09
 
@@ -19,6 +25,7 @@ the guesses generated during the second round will start from 10,001.
 based on the cracked passwords (as a secondary training file). Users could specify the number of cracked passwords when
 retraining the model according to the option `--secondary-sample`. Besides, by specifying the option of `-g`, users
 could specify how many rounds the model will be retrained.
+
 ```shell
 python backwords_secondary_main.py \
     -i 'training file' \
@@ -30,6 +37,7 @@ python backwords_secondary_main.py \
     --splitter 'use "empty" for character level backoff, "space" for " ", "tab" for "\t"' \
     --secondary-sample 'sample some, instead of all, cracked passwords to retrain the model'
 ```
+
 Note that you could also generate guesses based on Monte Carlo as follows:
 
 ```shell
@@ -43,6 +51,7 @@ python backwords_secondary_main.py \
     --splitter 'use "empty" for character level backoff, "space" for " ", "tab" for "\t"' \
     --secondary-sample 'sample some, instead of all, cracked passwords to retrain the model'
 ```
+
 In this case, the `-g` flag is ignored.
 
 -------

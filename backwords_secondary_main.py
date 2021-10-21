@@ -112,8 +112,6 @@ def wrapper():
     cli.add_argument("--using-samples", dest='using_sample_attack', required=False, type=int, default=1,
                      help="set the number of iterations if you want generate random passwords based on Monte Carlo "
                           "to crack passwords in the testing dataset")
-    cli.add_argument("--based-on-prior-guesses", dest="based_on_prior_guesses", required=False, action="store_true",
-                     help="the guess numbers will start from `prior guesses` instead of `0`")
     args = cli.parse_args()
     splitter_map = {'empty': '', 'space': ' ', 'tab': '\t'}
     if args.splitter.lower() in splitter_map:
@@ -126,10 +124,7 @@ def wrapper():
     if not os.path.exists(args.save):
         os.mkdir(args.save)
     already_cracked = set()
-    prior_guesses = 0
-    based_on_prior_guesses = args.based_on_prior_guesses
     guess_number_thresholds: List[int] = args.guess_number_thresholds
-    # guess_number_thresholds.append(-1)
     if guess_number_thresholds is not None:
         rounds = len(guess_number_thresholds)
         print(f"Guess number mode", file=sys.stderr, end=', ')

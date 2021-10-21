@@ -7,7 +7,6 @@ import os.path
 import pickle
 import random
 import sys
-from collections import defaultdict
 from typing import List, Tuple
 
 from backwords.backwords_secondary_trainer import backwords_counter
@@ -184,7 +183,8 @@ def wrapper():
             pass
         cums.append(cum)
         pass
-    #
+    # note that this is the union of all intermediate results
+    # each guess matters in this result file
     f_sectional_result = os.path.join(args.save, "sectional_result.txt")
     with open(f_sectional_result, "w") as fout_sectional_result:
         _cracked = 0

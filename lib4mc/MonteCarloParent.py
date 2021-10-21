@@ -30,14 +30,16 @@ class MonteCarlo(metaclass=abc.ABCMeta):
         """
         return .0, ""
 
-    def sample(self, size: int, sampled_pwds: Dict[str, int] = None, clearIfNotNone: bool = True) -> List[float]:
+    def sample(self, size: int, sampled_pwds: Dict[str, List] = None, clearIfNotNone: bool = True) -> List[float]:
         results = []
-        samples = defaultdict(int)
+        samples = {}
         for _ in tqdm(iterable=range(size), desc="Sampling: "):
             prob, pwd = self.sample1()
             results.append(prob)
-            samples[pwd] += 1
-        if isinstance(sampled_pwds, defaultdict):
+            if pwd not in samples:
+                samples[pwd] = [prob, 0]
+            samples[pwd][1] += 1
+        if isinstance(sampled_pwds, dict):
             if clearIfNotNone:
                 sampled_pwds.clear()
             sampled_pwds.update(samples)

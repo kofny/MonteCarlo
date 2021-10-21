@@ -37,13 +37,16 @@ def secondary_cracker(backwords, words, config, guess_number_threshold, **kwargs
     using_sample_attack = kwargs['using_sample_attack']
     sampled_pwds = None
     if using_sample_attack:
-        sampled_pwds = defaultdict(int)
+        sampled_pwds = {}
     ml2p_list = backword_mc.sample(size=kwargs['size'], sampled_pwds=sampled_pwds)
     if using_sample_attack:
         f_samples = os.path.join(save_in_folder, f"samples-{tag}.txt")
         with open(f_samples, 'w') as fout_samples:
-            for pwd, cnt in sampled_pwds.items():
-                fout_samples.write(f"{pwd}\t{cnt}\n")
+            sidx = 1
+            for pwd, (prob, cnt) in sorted(sampled_pwds.items(), key=lambda x: x[1][0]):
+                fout_samples.write(f"{pwd}\t{prob:.8f}\t{cnt}\n")
+                sampled_pwds[pwd] = sidx
+                sidx += cnt
         pass
     mc = MonteCarloLib(ml2p_list)
     scored_testing = backword_mc.parse_file(kwargs['testing'], using_component=True)
@@ -57,9 +60,10 @@ def secondary_cracker(backwords, words, config, guess_number_threshold, **kwargs
             _pwd = kwargs['splitter'].join(pwd)
             if _pwd in already_cracked:
                 continue
-            valid = (using_sample_attack and _pwd in sampled_pwds) or \
-                    (not using_sample_attack and gn <= guess_number_threshold and 0 < prob < 1000)
-            if valid:
+            valid1 = (using_sample_attack and _pwd in sampled_pwds)
+            if valid1:
+                gn = sampled_pwds[_pwd]
+            if valid1 or (not using_sample_attack and gn <= guess_number_threshold and 0 < prob < 1000):
                 secondary_training.extend([_pwd] * num)
                 cum.append((_pwd, prob, num, gn))
                 fout.write(f"{_pwd}\t{prob:.8f}\t{num}\t{gn}\n")

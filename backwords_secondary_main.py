@@ -163,7 +163,7 @@ def wrapper():
             signs.append(f"auto_hits-{v:,}")
     else:
         print(f"using samples", file=sys.stderr)
-        v = int(strategy[1])
+        v = int(strategy_value[1])
         func_thresholds = [(upper_bound, hits_upper_bound) for _ in range(v)]
         signs = [f"samples-{args.size}" for _ in range(v)]
         using_sample_attack = True

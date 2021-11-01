@@ -3,6 +3,23 @@
 This is a repo for Monte Carlo method. Some of guessing method has been rewritten and we can get more information from
 the result.
 
+## Update 2021/11/01
+
+Breaking updates!
+
+> Now we provide a unified flag to control the training process.
+
+`--strategy` receives four types of operations:
+
+- `guesses <guesses 1> <guesses 2> ...` controls the training process by different guess number thresholds
+- `hits <cracked passwords 1> <cracked passwords 2> ...` controls the training process by different numbers of cracked
+  passwords
+- `auto_hits <factor> <base> <termination>` controls the training process by generating the required number of cracked
+  passwords automatically
+- `samples <rounds>` controls the training process by applying the Monte Carlo simulation
+
+Note that the flags of `--using-samples`, `--guess-number-thresholds` are deleted.
+
 ## Update 2021/10/19
 
 > Intermediate results could affect the final results

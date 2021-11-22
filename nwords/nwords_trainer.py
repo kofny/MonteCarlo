@@ -62,7 +62,16 @@ def nwords_counter(nwords_list: TextIO, n: int, splitter: str, end_chr: str, sta
     for prefix, ends in tqdm(nwords_dict.items(), "Converting: "):
         nwords_float_dict[prefix] = {}
         total = sum(ends.values())
+
         for e, v in ends.items():
+            next_prefix = (*prefix[1:], e)
+            if next_prefix not in nwords_dict:
+                total -= v
+                continue
+        for e, v in ends.items():
+            next_prefix = (*prefix[1:], e)
+            if next_prefix not in nwords_dict:
+                continue
             nwords_float_dict[prefix][e] = (v / total)
     del nwords_dict
     return nwords_float_dict, words

@@ -44,7 +44,7 @@ def nwords_counter(nwords_list: TextIO, n: int, splitter: str, end_chr: str, sta
             context = tuple(sections[i:i + prefix_words_num])
             transition = sections[i + prefix_words_num]
             ngram = "".join(sections[i:i + prefix_words_num + 1])
-            valid_l_ngram = True
+            valid_l_ngram = transition in valid_l or transition in valid_d
             for c in ngram:
                 if c not in valid_l:
                     valid_l_ngram = False
@@ -65,13 +65,20 @@ def nwords_counter(nwords_list: TextIO, n: int, splitter: str, end_chr: str, sta
 
         for e, v in ends.items():
             next_prefix = (*prefix[1:], e)
-            if next_prefix not in nwords_dict:
+            if e != end_chr and next_prefix not in nwords_dict:
                 total -= v
                 continue
         for e, v in ends.items():
             next_prefix = (*prefix[1:], e)
-            if next_prefix not in nwords_dict:
+            if e != end_chr and next_prefix not in nwords_dict:
                 continue
             nwords_float_dict[prefix][e] = (v / total)
     del nwords_dict
     return nwords_float_dict, words
+
+
+if __name__ == '__main__':
+    with open('/home/cw/Codes/Python/MonteCarlo/toyrockyou.txt', 'r') as fin:
+        # with open('/home/cw/Documents/Experiments/SegLab/Corpora632/rockyou-src.txt', 'r') as fin:
+        nwords_counter(fin, n=6, splitter='', end_chr='\x03', start4words=0, skip4words=1, start_chr='\x00')
+    pass

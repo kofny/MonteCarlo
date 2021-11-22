@@ -95,6 +95,12 @@ class NWordsMonteCarlo(MonteCarlo):
         pwd_len = 0
         while True:
             tar = self._get_prefix(pwd, "")
+            expanded = self.nwords.get(tar)
+            if expanded is None:
+                pwd = self.default_start
+                prob = .0
+                pwd_len = 0
+                continue
             p, addon = pick_expand(self.nwords.get(tar))
             prob += self.minus_log2(p)
             if addon == self.end_chr:

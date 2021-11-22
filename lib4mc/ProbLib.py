@@ -32,7 +32,7 @@ def pick_expand(expanded: Tuple[Dict[str, float], List[str], List[float]]) -> Tu
     try:
         items, keys, cum_sums = expanded
     except TypeError:
-        print(expanded)
+        print(f"TypeError: expanded is {expanded}", file=sys.stderr)
         sys.exit(-1)
     if len(cum_sums) < 1:
         print(keys)

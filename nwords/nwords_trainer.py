@@ -21,6 +21,7 @@ def parse_line(line: str, splitter: str, start4words: int, skip4words: int):
 
 def nwords_counter(nwords_list: TextIO, n: int, splitter: str, end_chr: str, start4words: int,
                    skip4words: int, start_chr: str = '\x00'):
+    valid_l_or_d = {*list("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"), start_chr, end_chr}
     nwords_dict: Dict[Tuple, Dict[str, int]] = defaultdict(lambda: defaultdict(int))
     prefix_words_num = n - 1
     line_num = wc_l(nwords_list)
@@ -41,8 +42,13 @@ def nwords_counter(nwords_list: TextIO, n: int, splitter: str, end_chr: str, sta
         for i in range(len(sections) - prefix_words_num):
             context = tuple(sections[i:i + prefix_words_num])
             transition = sections[i + prefix_words_num]
-            ngram = "".join(sections[i:i+prefix_words_num+1])
-            if ngram.isalpha() or ngram.isdigit():
+            ngram = "".join(sections[i:i + prefix_words_num + 1])
+            valid_ngram = True
+            for c in ngram:
+                if c not in valid_l_or_d:
+                    valid_ngram = False
+                    break
+            if valid_ngram:
                 nwords_dict[context][transition] += cnt
     del section_dict
     nwords_float_dict: Dict[Tuple, Dict[str, float]] = {}

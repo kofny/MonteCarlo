@@ -39,9 +39,11 @@ def nwords_counter(nwords_list: TextIO, n: int, splitter: str, end_chr: str, sta
     nwords_list.close()
     for sections, cnt in tqdm(section_dict.items(), desc="Counting: "):
         for i in range(len(sections) - prefix_words_num):
-            grams = tuple(sections[i:i + prefix_words_num])
+            context = tuple(sections[i:i + prefix_words_num])
             transition = sections[i + prefix_words_num]
-            nwords_dict[grams][transition] += cnt
+            ngram = "".join(sections[i:i+prefix_words_num+1])
+            if ngram.isalpha() or ngram.isdigit():
+                nwords_dict[context][transition] += cnt
     del section_dict
     nwords_float_dict: Dict[Tuple, Dict[str, float]] = {}
     for prefix, ends in tqdm(nwords_dict.items(), "Converting: "):
